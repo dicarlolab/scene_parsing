@@ -151,7 +151,7 @@ body  {
 		internal_canonical.push(true);
 		
 		currIndex = jQuery.inArray(newObjName, obj);
-		$('#activeobjects').append('<p id="'+obj[currIndex]+'">'+obj[currIndex]+'</p>');
+		$('#activeobjects').append('<p id="'+obj[currIndex]+'">'+obj[currIndex]+' | <font size="1">Delete this object</font></p>');
 		
 		createSpec();
 		getImg(dispImg);
