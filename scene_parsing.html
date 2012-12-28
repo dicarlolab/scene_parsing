@@ -25,7 +25,7 @@ body  {
 .thrColElsHdr #header { 
 	background: #DDDDDD; 
 	padding: 0px 10px;
-	height: 8em;
+	height: 1em;
 } 
 .thrColElsHdr #header h1 {
 	margin: 0; /* zeroing the margin of the last element in the #header div will avoid margin collapse - an unexplainable space between divs. If the div has a border around it, this is not necessary as that also avoids the margin collapse */
@@ -79,6 +79,14 @@ body  {
     font-size: 1px;
     line-height: 0px;
 }
+.actionlink {
+	float: right;
+	font-size: 25%;
+}
+.actionlink:hover {
+	color: #0099FF;
+}
+
 --> 
 </style>
 
@@ -91,10 +99,9 @@ body  {
 <script type="text/javascript" src="http://web.mit.edu/esolomon/www/zen.js"></script>
 <script src="http://web.mit.edu/esolomon/www/javascripts/detect-zoom.js" type="text/javascript"></script>
 <script type="text/javascript" src="http://esolomon.scripts.mit.edu/ip.php"></script>
+<script type="text/javascript" src="http://web.mit.edu/esolomon/www/javascripts/jquery.jsonp-2.4.0.min.js"></script>
 
 <script type="text/javascript">
-//Begin OOP domain.
-
 	function Canvas() {
 		this.myobjs = [];
 	
@@ -112,14 +119,27 @@ body  {
 	
 	Canvas.prototype.addNewObj = function(newObj) {
 		this.myobjs.push(newObj);
+		var C = this;
 		
-		$('#activeobjects').append('<p>'+newObj.obj+'</p>');
-		$('#activeobjects p').last().click(function() {
-										$('#activeobjects p').css({'background-color':'#EBEBEB'});
+		$('#activeobjects').append('<div style="padding:5px; cursor:pointer;">'+newObj.obj+'<span class="actionlink">Delete this object</span></div>');
+		$('#activeobjects div').last().click(function() {
+										$('#activeobjects div').css({'background-color':'#EBEBEB'});
 										$(this).css({'background-color':'white'});
 										activeObj = newObj;
 										activeObj.populateParams();
 										});
+		$('#activeobjects div span').last().click(function() {
+										C.removeObj(newObj);
+										$(this).parent().fadeOut("slow");
+										C.createSpec();
+										C.showImg();
+										});
+										
+		$('#activeobjects div').css({'background-color':'#EBEBEB'}).last().css({'background-color':'white'});
+		activeObj = newObj;
+		activeObj.populateParams();
+		this.createSpec();
+		this.showImg();
 	}
 	
 	
@@ -169,14 +189,21 @@ body  {
 	}
 	
 	Canvas.prototype.showImg = function() {
-		imgObj = {preproc:JSON.stringify(this.preproc_init), spec:JSON.stringify(this.spec_init)};							  
-				
-		$.get( 'http://50.19.109.25:27719/renderimage', imgObj,
-				 success=dispImg,
-				 dataType='jsonp',
-				 traditional=true );
-	
+		imgObj = {preproc:JSON.stringify(this.preproc_init), spec:JSON.stringify(this.spec_init)};		  	
+		
+		$.ajax({
+			url:'http://50.19.109.25:27719/renderimage',
+			dataType: 'jsonp',
+			data: imgObj,
+			type: 'GET',
+			traditional: true,
+			success: dispImg
+			});
 	}	
+	
+	Canvas.prototype.removeObj = function(obj) {
+		this.myobjs.splice(jQuery.inArray(obj, this.myobjs), 1);	
+	}
 	
 	function ThreeDModel(newObjName) {
 		this.tz = 0;
@@ -213,10 +240,6 @@ body  {
 		$('#position_x').attr('value', this.ty);
 		$('#position_y').attr('value', this.tz);	
 	}
-	
-//End OOP domain.	
-	
-
 		
 		
 	function dispImg(data) {	
@@ -268,10 +291,20 @@ body  {
 		c.showImg();	
 		
 		
-		$('form').submit(function() {activeObj.updateParams();
+		$('#controlForm').submit(function() {activeObj.updateParams();
 									c.createSpec();
 									c.showImg();
 									return false; }); 
+		$('#newObj').submit(function() {
+								c.addNewObj(new ThreeDModel($('#enterNewObj').attr('value')));
+								c.createSpec();
+								c.showImg();
+								return false;
+								});
+		$('#addNewObjLink').click(function() {		
+								$('#newObjContainer').slideToggle("fast");
+								});
+		
 		clickToMove();		
 		
 	});
@@ -296,7 +329,7 @@ body  {
     <h3>Controls Object Pose</h3>
     
     <div style="float:left;" id="depthSlider"></div>
-    <form name="controlForm">
+    <form name="controlForm" id="controlForm">
     <div id="rotations">
     	
     	X Rotation Input:
@@ -308,11 +341,8 @@ body  {
     	Z Rotation Input:
     	<input class="control" type="text" value="0" id="rotZ" name="rotZ" size=3 />
     	
-    	
 	</div>
-	
-	<h3>Object Identity</h3>
-	<div id="objname">
+	<div id="objname" style="visibility:hidden">
 		Input object name:
 		<input class="control" id="objname_" size=15 type="text" name="objname_" value="schnauzer" />
 	</div>
@@ -330,17 +360,22 @@ body  {
 			Input Y (vertical) position:
 			<input class="control" id="position_y" size=5 type="text" name="position_y" value="0.0" />
 		</div>
-		
-	<h3>Active Objects</h3>
+	<input type="submit" style="visibility:hidden"/>
+	</form>
+	<div><span style="font-size:115%;"><b>Active Objects</b></span>
+	<br /><span id="addNewObjLink" class="actionlink" style="float:none; font-size:80%; cursor:pointer;">&oplus; Add New Object</span></div>
+	<div id="newObjContainer" style="display:none"><form id="newObj"><input id="enterNewObj" type="text" value="" size=15 /><input type="submit" action="submit" value="Add" />
+	</form>
+	</div>
+	<br />
 		<div id="activeobjects">
 		</div>
 			
-	<input type="submit" style="visibility:hidden"/>
-	</form>
+	
 	
 	
   <!-- end #sidebar2 --></div>
-  <div id="mainContent">
+  <div align="center" id="mainContent">
     <h2> Main Canvas</h2>
     Click on the canvas to position the object.
     <div id="canvas_container" >
