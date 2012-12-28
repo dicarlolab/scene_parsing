@@ -93,226 +93,186 @@ body  {
 <script type="text/javascript" src="http://esolomon.scripts.mit.edu/ip.php"></script>
 
 <script type="text/javascript">
-		
-	function initVars() {
-		preproc_init = {"dtype": "uint8",
+//Begin OOP domain.
+
+	function Canvas() {
+		this.myobjs = [];
+	
+		this.preproc_init = {"dtype": "uint8",
 					 "size": [512, 512, 3],
 					 "normalize": false,
 					 "mode": "RGB"};
+					 
+		this.bgname = "whitebg.jpg";
+		this.bgpsi = 0.0;
+		this.bgphi = 33;
+		this.bgscale = 1.0;
 		
-		tz = [0];
-		obj = ["schnauzer"];
-		tx = [0];
-		ty = [0];
-		rxy = [0];
-		s = [1];
-		rxz = [0];
-		ryz = [0];
-		//bgname = "MOUNT_21SN.jpg";		
-		bgname = "whitebg.jpg";	
-		texture = [null];
-		texture_mode = [null];
-		internal_canonical = [true];
-							 
-		spec_init = {"texture_mode": texture_mode,
-				"bgpsi": 0.0,
-				"texture": texture,
-				"tz": tz,
-				"obj": obj,
-				"tx": tx,
-				"ty": ty,
-				"bgscale": 1.0,
-				"rxy": rxy,
-				"s": s,
-				"rxz": rxz,
-				"ryz": ryz,
-				"bgname": bgname,
-				"bgphi": 33,
-				"internal_canonical":internal_canonical};	
+	}
+	
+	Canvas.prototype.addNewObj = function(newObj) {
+		this.myobjs.push(newObj);
+		
+		$('#activeobjects').append('<p>'+newObj.obj+'</p>');
+		$('#activeobjects p').last().click(function() {
+										$('#activeobjects p').css({'background-color':'#EBEBEB'});
+										$(this).css({'background-color':'white'});
+										activeObj = newObj;
+										activeObj.populateParams();
+										});
+	}
+	
+	
+	Canvas.prototype.createSpec = function() {
+		this.tz = [];
+		this.obj = [];
+		this.tx = [];
+		this.ty = [];
+		this.rxy = [];
+		this.s = [];
+		this.rxz = [];
+		this.ryz = [];
+		this.texture = [];
+		this.texture_mode = [];
+		this.internal_canonical = [];
+	
+	for (i = 0; i < this.myobjs.length; i++) {
+		this.tz.push(this.myobjs[i].tz);
+		this.obj.push(this.myobjs[i].obj);
+		this.tx.push(this.myobjs[i].tx);
+		this.ty.push(this.myobjs[i].ty);
+		this.rxy.push(this.myobjs[i].rxy);
+		this.s.push(this.myobjs[i].s);
+		this.rxz.push(this.myobjs[i].rxz);
+		this.ryz.push(this.myobjs[i].ryz);
+		this.texture.push(this.myobjs[i].texture);
+		this.texture_mode.push(this.myobjs[i].texture_mode);
+		this.internal_canonical.push(this.myobjs[i].internal_canonical);
+		}
+		
+		this.spec_init = {"texture_mode": this.texture_mode,
+				"bgpsi": this.bgpsi,
+				"texture": this.texture,
+				"tz": this.tz,
+				"obj": this.obj,
+				"tx": this.tx,
+				"ty": this.ty,
+				"bgscale": this.bgscale,
+				"rxy": this.rxy,
+				"s": this.s,
+				"rxz": this.rxz,
+				"ryz": this.ryz,
+				"bgname": this.bgname,
+				"bgphi": this.bgphi,
+				"internal_canonical": this.internal_canonical};
+		
+	}
+	
+	Canvas.prototype.showImg = function() {
+		imgObj = {preproc:JSON.stringify(this.preproc_init), spec:JSON.stringify(this.spec_init)};							  
 				
-		obj_choices = ['schnauzer', '001M', '04_piano', 'maple02', 'MB28089',
-						'Professor_pose10', 'Tea_Kettle', 'yacht'];
-		init_pos = [[275], [275]];
-		currIndex = 0;
-	
-	}
-	
-	function addNewObject(newObjName) {
-		tz.push(0);
-		obj.push(newObjName);
-		tx.push(0);
-		ty.push(0);
-		rxy.push(0);
-		s.push(1);
-		rxz.push(0);
-		ryz.push(0);
-		texture.push(null);
-		texture_mode.push(null);
-		internal_canonical.push(true);
-		
-		currIndex = jQuery.inArray(newObjName, obj);
-		$('#activeobjects').append('<p id="'+obj[currIndex]+'">'+obj[currIndex]+' | <font size="1">Delete this object</font></p>');
-		
-		createSpec();
-		getImg(dispImg);
-	
-	}
-	
-	function createSpec() {
-	
-		spec_init = {"texture_mode": texture_mode,
-				"bgpsi": 0.0,
-				"texture": texture,
-				"tz": tz,
-				"obj": obj,
-				"tx": tx,
-				"ty": ty,
-				"bgscale": 1.0,
-				"rxy": rxy,
-				"s": s,
-				"rxz": rxz,
-				"ryz": ryz,
-				"bgname": bgname,
-				"bgphi": 33,
-				"internal_canonical":internal_canonical};	
-	}
-	
-	
-	function getImg(callback) {
-		imgObj = {preproc:JSON.stringify(preproc_init), spec:JSON.stringify(spec_init)};							  
-		//imgObj = JSON.stringify(imgObj);
-		
 		$.get( 'http://50.19.109.25:27719/renderimage', imgObj,
-				 success=callback,
+				 success=dispImg,
 				 dataType='jsonp',
 				 traditional=true );
 	
+	}	
+	
+	function ThreeDModel(newObjName) {
+		this.tz = 0;
+		this.obj = newObjName;
+		this.tx = 0;
+		this.ty = 0;
+		this.rxy = 0;
+		this.s = 1;
+		this.rxz = 0;
+		this.ryz = 0;
+		this.texture = null;
+		this.texture_mode = null;
+		this.internal_canonical = true;
+		this.init_pos = [[275], [275]];
+	
 	}
+	
+	ThreeDModel.prototype.updateParams = function() {
+		this.rxy = parseInt($('#rotX').attr('value'));									
+		this.ryz = parseInt($('#rotY').attr('value'));	
+		this.rxz = parseInt($('#rotZ').attr('value'));	
+		this.obj = $('#objname_').attr('value');
+		this.s = parseFloat($('#scale').attr('value'));
+		this.ty = parseFloat($('#position_x').attr('value'));
+		this.tz = parseFloat($('#position_y').attr('value'));	
+	}
+	
+	ThreeDModel.prototype.populateParams = function() {
+		$('#rotX').attr('value', this.rxy);
+		$('#rotY').attr('value', this.ryz);
+		$('#rotZ').attr('value', this.rxz);
+		$('#objname_').attr('value', this.obj);
+		$('#scale').attr('value', this.s);
+		$('#position_x').attr('value', this.ty);
+		$('#position_y').attr('value', this.tz);	
+	}
+	
+//End OOP domain.	
+	
+
 		
 		
 	function dispImg(data) {	
 		$('#canvas').attr('src', data.url);
 	}
-	
-	function enterData() {
-		console.log('enterData');											
-		rxy[currIndex] = parseInt(this.rotX.value);										
-		ryz[currIndex] = parseInt(this.rotY.value);
-		rxz[currIndex] = parseInt(this.rotZ.value);
-		obj[currIndex] = this.objname_.value;
-		s[currIndex] = parseFloat(this.scale.value);
-		ty[currIndex] = parseFloat(this.position_x.value);
-		tz[currIndex] = parseFloat(this.position_y.value);
 		
-		createSpec();
-		getImg(dispImg);
-	
-	}
-	
-	function generateObjStrip() {
-	obj_choices_copy = obj_choices.slice(0);
-		//for (i=0; i < obj_choices.length; i++) {
-		//	obj[0] = obj_choices[i];
-		//	createSpec();
-		//	getImg(displayStrip);
-		//}
-		for (i=0; i < obj_choices.length; i++) {
-			$('#stripContainer').append('<div class="stripImg" style="float:left; margin:3px;" id="'+obj_choices[i]+'"><img width=75 height=75 src="" /></div>');
-		}
-		
-		stripURLs = [];
-		$('#stripContainer').children().each(function() {
-											obj[0] = this.id;
-											createSpec();
-											getImg(displayStrip);
-											});	
-	}
-	
-	function displayStrip(data) {
-		stripURLs.push(data.url)		
-				
-	}
 	
 	function clickToMove() {
-	//There are 0.0055 steps per pixel moved.
+	//There are 0.005505 steps per pixel moved.
 		$('#canvas').click(function(e) {
 			var offset = $(this).offset();
 			var pos_x = e.pageX - offset.left;
 			var pos_y = e.pageY - offset.top;
-			init_pos[0].push(pos_x);
-			init_pos[1].push(pos_y);
+			activeObj.init_pos[0].push(pos_x);
+			activeObj.init_pos[1].push(pos_y);
 			
-			pix_change_x = pos_x - init_pos[0][init_pos[0].length-2];
-			pix_change_y = pos_y - init_pos[1][init_pos[1].length-2];
+			pix_change_x = pos_x - activeObj.init_pos[0][activeObj.init_pos[0].length-2];
+			pix_change_y = pos_y - activeObj.init_pos[1][activeObj.init_pos[1].length-2];
 			console.log(pix_change_x);
 			console.log(pix_change_y);
 			
 			step_change_x = pix_change_x*0.005505;
 			step_change_y = pix_change_y*0.005505;
 			
-			ty[currIndex] = ty[currIndex]+step_change_x;
-			tz[currIndex] = tz[currIndex]-step_change_y;
+			activeObj.ty = activeObj.ty+step_change_x;
+			activeObj.tz = activeObj.tz-step_change_y;
 			
-			$('#position_x').attr('value',''+ty[0]);
-			$('#position_y').attr('value',''+tz[0]);
+			$('#position_x').attr('value',''+activeObj.ty);
+			$('#position_y').attr('value',''+activeObj.tz);
 			
-			createSpec();
-			getImg(dispImg);
+			c.createSpec();
+			c.showImg();
+			
 		});
-		
-		
-	
-	
 	}
-	
-	function setFocusOut() {
-		$('.control').focusout(function() {											
-									if (this.id == "rotX") {																		
-										rxy[currIndex] = parseInt(this.value);
-									}
-									else if (this.id == "rotY") {												
-										ryz[currIndex] = parseInt(this.value);
-									}
-									else if (this.id == "rotZ") {
-										rxz[currIndex] = parseInt(this.value)
-									}
-									else if(this.id == "objname_") {
-										obj[currIndex] = this.value
-									}
-									else if(this.id == "scale") {
-										s[currIndex] = parseFloat(this.value);
-									}
-									else if(this.id == "position_x") {
-										ty[currIndex] = parseFloat(this.value);
-									}
-									else if(this.id == "position_y") {
-										tz[currIndex] = parseFloat(this.value);
-									}
-									createSpec();
-									getImg(dispImg);
-									});
-	
-	}
-	
-	$(document).ready( function() {
-		//$('#depthSlider').slider({orientation: 'vertical',
-		//						  min: 0,
-		//						  max: 100,
-		//						  step: 1});
-		
-		
 
+	
+	$(document).ready( function() {		
+		c = new Canvas;
+		m = new ThreeDModel('schnauzer');
+		activeObj = m;
 		
-											
-		initVars();
-		getImg(dispImg);
-		//generateObjStrip(); 
-		clickToMove();
+		c.addNewObj(m);
 		
-		$('form').submit(function() {enterData()
+		n = new ThreeDModel('001M');
+		c.addNewObj(n);
+		
+		c.createSpec();
+		c.showImg();	
+		
+		
+		$('form').submit(function() {activeObj.updateParams();
+									c.createSpec();
+									c.showImg();
 									return false; }); 
-		$('activeobjects').append('<p id="'+obj[currIndex]+'">'+obj[currIndex]+'</p>');
-		
+		clickToMove();		
 		
 	});
 	
