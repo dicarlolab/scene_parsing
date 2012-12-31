@@ -16,16 +16,17 @@ body  {
 }
 
 .thrColElsHdr #container { 
-	width: 70em;  /* this width will create a container that will fit in an 800px browser window if text is left at browser default font sizes */
+	width: 73em;  /* this width will create a container that will fit in an 800px browser window if text is left at browser default font sizes */
 	background: #FFFFFF;
 	margin: 10px auto; /* the auto margins (in conjunction with a width) center the page */
 	border: 0px solid #000000;
 	text-align: left; /* this overrides the text-align: center on the body element. */
 } 
 .thrColElsHdr #header { 
-	background: #DDDDDD; 
+	background: #D84A38; 
 	padding: 0px 10px;
-	height: 1em;
+	height: 5px;
+	width: auto;
 } 
 .thrColElsHdr #header h1 {
 	margin: 0; /* zeroing the margin of the last element in the #header div will avoid margin collapse - an unexplainable space between divs. If the div has a border around it, this is not necessary as that also avoids the margin collapse */
@@ -34,19 +35,29 @@ body  {
 
 .thrColElsHdr #sidebar1 {
 	float: left; 
-	width: 11em; /* since this element is floated, a width must be given */
-	height: 40em;
-	background: #EBEBEB; /* the background color will be displayed for the length of the content in the column, but no further */
-	padding: 15px 0; /* top and bottom padding create visual space within this div */
+	width: 18em; /* since this element is floated, a width must be given */
+	height: auto;
+	background: #F3F3F3; /* the background color will be displayed for the length of the content in the column, but no further */
+	padding: 5px 0; /* top and bottom padding create visual space within this div */
+	border-style: solid;
+	border-width: 0 1px 5px 1px;
+	border-color: #D84A38;
+	border-bottom-left-radius: 5px;
+	border-bottom-right-radius: 5px;
 }
 .thrColElsHdr #sidebar2 {
 	float: right; 
 	width: 20em; /* since this element is floated, a width must be given */
-	height: 40em;
-	background: #EBEBEB; /* the background color will be displayed for the length of the content in the column, but no further */
-	padding: 15px 0; /* top and bottom padding create visual space within this div */
+	height: auto;
+	background: #F3F3F3; /* the background color will be displayed for the length of the content in the column, but no further */
+	padding: 5px 0; /* top and bottom padding create visual space within this div */
+	border-style: solid;
+	border-width: 0 1px 5px 1px;
+	border-color: #D84A38;
+	border-bottom-left-radius: 5px;
+	border-bottom-right-radius: 5px;
 }
-.thrColElsHdr #sidebar1 h3, .thrColElsHdr #sidebar1 p, .thrColElsHdr #sidebar2 div, .thrColElsHdr #sidebar2 h3 {
+.thrColElsHdr #sidebar1 h3, .thrColElsHdr #sidebar1 div, .thrColElsHdr #sidebar2 div, .thrColElsHdr #sidebar2 h3 {
 	margin-left: 10px; /* the left and right margin should be given to every element that will be placed in the side columns */
 	margin-right: 10px;
 }
@@ -81,10 +92,14 @@ body  {
 }
 .actionlink {
 	float: right;
-	font-size: 25%;
+	font-size: x-small;
 }
 .actionlink:hover {
-	color: #0099FF;
+	color: #4A8CF6;
+}
+.slider-rot .ui-slider-range{ background: #FFFFFF; }
+li.a {
+	list-style-type: none;
 }
 
 --> 
@@ -99,7 +114,7 @@ body  {
 <script type="text/javascript" src="http://web.mit.edu/esolomon/www/zen.js"></script>
 <script src="http://web.mit.edu/esolomon/www/javascripts/detect-zoom.js" type="text/javascript"></script>
 <script type="text/javascript" src="http://esolomon.scripts.mit.edu/ip.php"></script>
-<script type="text/javascript" src="http://web.mit.edu/esolomon/www/javascripts/jquery.jsonp-2.4.0.min.js"></script>
+<script type="text/javascript" src="http://web.mit.edu/esolomon/www/scene_parsing/full_obj_list.js"></script>
 
 <script type="text/javascript">
 	function Canvas() {
@@ -121,21 +136,22 @@ body  {
 		this.myobjs.push(newObj);
 		var C = this;
 		
-		$('#activeobjects').append('<div style="padding:5px; cursor:pointer;">'+newObj.obj+'<span class="actionlink">Delete this object</span></div>');
-		$('#activeobjects div').last().click(function() {
-										$('#activeobjects div').css({'background-color':'#EBEBEB'});
-										$(this).css({'background-color':'white'});
+		$('#activeobjects').append('<li class="a" style="padding:5px; cursor:pointer;">'+newObj.obj+'<span class="actionlink">Delete this object</span></li>');
+		$('#activeobjects li').last().click(function() {
+										$('#activeobjects li').css({'background-color':'#F3F3F3'});
+										$(this).css({'background-color':'#FFFFBB'});
 										activeObj = newObj;
 										activeObj.populateParams();
+										resetSliders();
 										});
-		$('#activeobjects div span').last().click(function() {
+		$('#activeobjects li span').last().click(function() {
 										C.removeObj(newObj);
 										$(this).parent().fadeOut("slow");
 										C.createSpec();
 										C.showImg();
 										});
 										
-		$('#activeobjects div').css({'background-color':'#EBEBEB'}).last().css({'background-color':'white'});
+		$('#activeobjects li').css({'background-color':'#F3F3F3'}).last().css({'background-color':'#FFFFBB'});
 		activeObj = newObj;
 		activeObj.populateParams();
 		this.createSpec();
@@ -228,7 +244,8 @@ body  {
 		this.obj = $('#objname_').attr('value');
 		this.s = parseFloat($('#scale').attr('value'));
 		this.ty = parseFloat($('#position_x').attr('value'));
-		this.tz = parseFloat($('#position_y').attr('value'));	
+		this.tz = parseFloat($('#position_y').attr('value'));
+		this.tx = parseFloat($('#position_z').attr('value'));
 	}
 	
 	ThreeDModel.prototype.populateParams = function() {
@@ -238,7 +255,9 @@ body  {
 		$('#objname_').attr('value', this.obj);
 		$('#scale').attr('value', this.s);
 		$('#position_x').attr('value', this.ty);
-		$('#position_y').attr('value', this.tz);	
+		$('#position_y').attr('value', this.tz);
+		$('#position_z').attr('value', this.tx);
+		$('#curr_bg').html(c.bgname);
 	}
 		
 		
@@ -275,6 +294,59 @@ body  {
 			
 		});
 	}
+	
+	function resetSliders() {
+		$('#slider-rotX').slider("value", $('#rotX').attr("value"));
+		$('#slider-rotY').slider("value", $('#rotY').attr("value"));
+		$('#slider-rotZ').slider("value", $('#rotZ').attr("value"));
+	}
+	function initSliders() {
+		$('#slider-rotX').slider({
+			orientation: "horizontal",
+			range: "min",
+			min: 0,
+			max: 360,
+			value: 0,
+			slide: function(event, ui) {
+				$('#rotX').val(ui.value);
+			},
+			stop: function() {
+				activeObj.updateParams();
+				c.createSpec();
+				c.showImg();
+			}
+		});
+		$('#slider-rotY').slider({
+			orientation: "horizontal",
+			range: "min",
+			min: 0,
+			max: 360,
+			value: 0,
+			slide: function(event, ui) {
+				$('#rotY').val(ui.value);
+			},
+			stop: function() {
+				activeObj.updateParams();
+				c.createSpec();
+				c.showImg();
+			}
+		});
+		$('#slider-rotZ').slider({
+			orientation: "horizontal",
+			range: "min",
+			min: 0,
+			max: 360,
+			value: 0,
+			slide: function(event, ui) {
+				$('#rotZ').val(ui.value);
+			},
+			stop: function() {
+				activeObj.updateParams();
+				c.createSpec();
+				c.showImg();
+			}
+		});
+	};
 
 	
 	$(document).ready( function() {		
@@ -305,7 +377,12 @@ body  {
 								$('#newObjContainer').slideToggle("fast");
 								});
 		
-		clickToMove();		
+		clickToMove();
+		initSliders();
+		
+		$('#enterNewObj').autocomplete({
+			source: full_obj_list
+		});
 		
 	});
 	
@@ -316,62 +393,69 @@ body  {
 <body class="thrColElsHdr">
 
 <div id="container">
-  <div id="header" style="display:table; width:100%;">
-  	<div id="stripContainer" style="vertical-align:middle; display:table-cell;">
-  	</div>
-  <!-- end #header --></div>
+  <div id="header">
+  </div><!-- end #header -->
   
   <div id="sidebar1">
-    <p align="center">background strip goes here.
-  <!-- end #sidebar1 --></div>
-  
-  <div id="sidebar2">
-    <h3>Controls Object Pose</h3>
-    
-    <div style="float:left;" id="depthSlider"></div>
-    <form name="controlForm" id="controlForm">
-    <div id="rotations">
-    	
-    	X Rotation Input:
-    	<input class="control" type="text" value="0" id="rotX" name="rotX" size=3 />
-    	</br>
-    	Y Rotation Input:
-    	<input class="control" type="text" value="0" id="rotY" name="rotY" size=3 />
-    	</br>
-    	Z Rotation Input:
-    	<input class="control" type="text" value="0" id="rotZ" name="rotZ" size=3 />
-    	
-	</div>
-	<div id="objname" style="visibility:hidden">
-		Input object name:
-		<input class="control" id="objname_" size=15 type="text" name="objname_" value="schnauzer" />
-	</div>
-		
-	<h3>Scale</h3>
-	<div id="scale_">
-		Input object scale:
-		<input class="control" id="scale" size=4 type="text" name="scale" value="1.0" />
-	</div>
-	
-	<h3>Position</h3>
-		<div id="position_container">
-			Input X (horizontal) position:
-			<input class="control" id="position_x" size=5 type="text" name="position_x" value="0.0" />
-			Input Y (vertical) position:
-			<input class="control" id="position_y" size=5 type="text" name="position_y" value="0.0" />
-		</div>
-	<input type="submit" style="visibility:hidden"/>
-	</form>
-	<div><span style="font-size:115%;"><b>Active Objects</b></span>
-	<br /><span id="addNewObjLink" class="actionlink" style="float:none; font-size:80%; cursor:pointer;">&oplus; Add New Object</span></div>
-	<div id="newObjContainer" style="display:none"><form id="newObj"><input id="enterNewObj" type="text" value="" size=15 /><input type="submit" action="submit" value="Add" />
+    <h3 style="margin-bottom: 4px;">Active Objects</h3>
+	<div><span id="addNewObjLink" class="actionlink" style="float:none; font-size:80%; cursor:pointer;">&oplus; Add New Object</span></div>
+	<div id="newObjContainer" style="display:none; font-size:small;"><form id="newObj"><input id="enterNewObj" type="text" value="" size=15 /><input type="submit" action="submit" value="Add" />
 	</form>
 	</div>
 	<br />
 		<div id="activeobjects">
 		</div>
-			
 	
+    <h3 style="margin-bottom: 4px;">Current Background</h3>
+    <div id="curr_bg"></div>
+  <!-- end #sidebar1 --></div>
+  
+  <div id="sidebar2">
+    <h3 style="margin-bottom: 4px;">Controls Object Pose</h3>
+    <form name="controlForm" id="controlForm">
+    <div id="rotations">
+    	
+    	X Rotation Input:
+    	<input class="control" type="text" value="0" id="rotX" name="rotX" size=3 />
+	<div class="slider-rot" id="slider-rotX" style="width:200px; margin-top: 4px;"></div>
+    	</br>
+    	Y Rotation Input:
+    	<input class="control" type="text" value="0" id="rotY" name="rotY" size=3 />
+	<div class="slider-rot" id="slider-rotY" style="width:200px; margin-top: 4px;"></div>
+    	</br>
+    	Z Rotation Input:
+    	<input class="control" type="text" value="0" id="rotZ" name="rotZ" size=3 />
+	<div class="slider-rot" id="slider-rotZ" style="width:200px; margin-top: 4px;"></div>    	
+	</div>
+	<div id="objname" style="visibility:hidden; height: 0px;">
+		Input object name:
+		<input class="control" id="objname_" size=15 type="text" name="objname_" value="schnauzer" />
+	</div>
+		
+	<h3 style="margin-bottom: 4px;">Scale</h3>
+	<div style="font-size:x-small;">(1 is standard, 0.1 is very small, and 10 is very large)</div>
+	<div id="scale_">
+		Input object scale:
+		<input class="control" id="scale" size=4 type="text" name="scale" value="1.0" />
+	</div>
+	
+	<h3 style="margin-bottom: 4px;">Position</h3>
+		<div id="position_container">
+			Input X (horizontal) position:
+			<input class="control" id="position_x" size=5 type="text" name="position_x" value="0" />
+			<br />
+			Input Y (vertical) position:
+			<input class="control" id="position_y" size=5 type="text" name="position_y" value="0" />
+			<br />
+			Input Z (Depth) position:
+			<input class="control" id="position_z" size=5 type="text" name="position_z" value="0" />
+		</div>
+		<br/>
+	<div align="center">
+	<input type="submit" style="visibility:visible; height: auto; width: auto;" value="Update Object"/>
+	</div>
+	</form>
+    
 	
 	
   <!-- end #sidebar2 --></div>
@@ -379,7 +463,7 @@ body  {
     <h2> Main Canvas</h2>
     Click on the canvas to position the object.
     <div id="canvas_container" >
-    	<img src="" id="canvas" border=1 style="max-height:85%;"/>
+    	<img src="" id="canvas" border=1 style="max-height:85%; cursor: pointer;"/>
     </div>
 	<!-- This clearing element should immediately follow the #mainContent div in order to force the #container div to contain all child floats --><br class="clearfloat" />
 <!-- end #container --></div>
