@@ -350,10 +350,10 @@ li.a {
 
 	
 	$(document).ready( function() {		
+		canvas_record = new Array();
 		c = new Canvas;
 		m = new ThreeDModel('schnauzer');
-		activeObj = m;
-		
+		activeObj = m;		
 		c.addNewObj(m);
 		
 		n = new ThreeDModel('001M');
@@ -375,6 +375,15 @@ li.a {
 								});
 		$('#addNewObjLink').click(function() {		
 								$('#newObjContainer').slideToggle("fast");
+								});
+		$('#submitCanvas').click(function() {
+								canvas_record.push(c.spec_init);
+								$('#activeobjects').html('');					
+								c = new Canvas; //Replace old canvas
+								m = new ThreeDModel('schnauzer');
+								c.addNewObj(m);
+								c.createSpec();
+								c.showImg();
 								});
 		
 		clickToMove();
@@ -465,6 +474,8 @@ li.a {
     <div id="canvas_container" >
     	<img src="" id="canvas" border=1 style="max-height:85%; cursor: pointer;"/>
     </div>
+    <p>
+    <button id="submitCanvas" type="button" style="width:auto; height:40px">Submit This Scene</button>
 	<!-- This clearing element should immediately follow the #mainContent div in order to force the #container div to contain all child floats --><br class="clearfloat" />
 <!-- end #container --></div>
 </body>
