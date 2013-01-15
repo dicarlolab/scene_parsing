@@ -105,8 +105,10 @@ li.a {
 --> 
 </style>
 
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" />
+<link rel="stylesheet" href="http://web.mit.edu/esolomon/www/scene_parsing/knobKnob.css" />
+
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
 <script type="text/javascript" language="JavaScript" src="http://web.mit.edu/esolomon/www/browserdetect.js">
 </script>
@@ -115,6 +117,8 @@ li.a {
 <script src="http://web.mit.edu/esolomon/www/javascripts/detect-zoom.js" type="text/javascript"></script>
 <script type="text/javascript" src="http://esolomon.scripts.mit.edu/ip.php"></script>
 <script type="text/javascript" src="http://web.mit.edu/esolomon/www/scene_parsing/full_obj_list.js"></script>
+<script src="http://web.mit.edu/esolomon/www/javascripts/transform.js" type="text/javascript"></script>
+<script src="http://web.mit.edu/esolomon/www/javascripts/knobKnob.jquery.js" type="text/javascript"></script>
 
 <script type="text/javascript">
 	function Canvas() {
@@ -142,7 +146,7 @@ li.a {
 										$(this).css({'background-color':'#FFFFBB'});
 										activeObj = newObj;
 										activeObj.populateParams();
-										resetSliders();
+										resetKnobs();
 										});
 		$('#activeobjects li span').last().click(function() {
 										C.removeObj(newObj);
@@ -295,57 +299,57 @@ li.a {
 		});
 	}
 	
-	function resetSliders() {
-		$('#slider-rotX').slider("value", $('#rotX').attr("value"));
-		$('#slider-rotY').slider("value", $('#rotY').attr("value"));
-		$('#slider-rotZ').slider("value", $('#rotZ').attr("value"));
+	function resetKnobs() {
+		$('.knob_control').html('');
+		$('#knobX').knobKnob({
+			snap: 0, 
+			value: $('#rotX').attr("value"),
+			turn: function(ratio){
+				$('#rotX').val(ratio*360);
+				}
+		});
+		$('#knobY').knobKnob({
+			snap: 0,
+			value: $('#rotY').attr("value"),
+			turn: function(ratio){
+				$('#rotY').val(ratio*360);
+				}
+		});
+		$('#knobZ').knobKnob({
+			snap: 0,
+			value: $('#rotZ').attr("value"),
+			turn: function(ratio){
+				$('#rotZ').val(ratio*360);
+				}
+		});
 	}
-	function initSliders() {
-		$('#slider-rotX').slider({
-			orientation: "horizontal",
-			range: "min",
-			min: 0,
-			max: 360,
+	function initKnobs() {
+		$('#knobX').knobKnob({
+			snap: 0, 
 			value: 0,
-			slide: function(event, ui) {
-				$('#rotX').val(ui.value);
-			},
-			stop: function() {
-				activeObj.updateParams();
-				c.createSpec();
-				c.showImg();
-			}
+			turn: function(ratio){
+				$('#rotX').val(ratio*360);
+				}
 		});
-		$('#slider-rotY').slider({
-			orientation: "horizontal",
-			range: "min",
-			min: 0,
-			max: 360,
+		$('#knobY').knobKnob({
+			snap: 0,
 			value: 0,
-			slide: function(event, ui) {
-				$('#rotY').val(ui.value);
-			},
-			stop: function() {
-				activeObj.updateParams();
-				c.createSpec();
-				c.showImg();
-			}
+			turn: function(ratio){
+				$('#rotY').val(ratio*360);
+				}
 		});
-		$('#slider-rotZ').slider({
-			orientation: "horizontal",
-			range: "min",
-			min: 0,
-			max: 360,
+		$('#knobZ').knobKnob({
+			snap: 0,
 			value: 0,
-			slide: function(event, ui) {
-				$('#rotZ').val(ui.value);
-			},
-			stop: function() {
-				activeObj.updateParams();
-				c.createSpec();
-				c.showImg();
-			}
+			turn: function(ratio){
+				$('#rotZ').val(ratio*360);
+				}
 		});
+		$('.knob_control').mouseup(function(){
+			activeObj.updateParams();
+			c.createSpec();
+			c.showImg();
+			});
 	};
 
 	
@@ -360,10 +364,14 @@ li.a {
 		c.addNewObj(n);
 		
 		c.createSpec();
-		c.showImg();	
+		c.showImg();
+		
+		randomObjs = ['001M', 'schnauzer', 'elephant', 'cargo', 'MB26901', '22_acoustic_guitar', 'Bathroom_Scale',
+			      'Soldier_pose01', 'leaves02', 'MB26893', 'Beverage_Machine' ];
 		
 		
 		$('#controlForm').submit(function() {activeObj.updateParams();
+									resetKnobs();
 									c.createSpec();
 									c.showImg();
 									return false; }); 
@@ -387,11 +395,12 @@ li.a {
 								});
 		
 		clickToMove();
-		initSliders();
+		initKnobs();
 		
 		$('#enterNewObj').autocomplete({
 			source: full_obj_list
 		});
+				
 		
 	});
 	
@@ -403,6 +412,8 @@ li.a {
 
 <div id="container">
   <div id="header">
+	<div id="imgselect">
+	</div>
   </div><!-- end #header -->
   
   <div id="sidebar1">
@@ -424,17 +435,23 @@ li.a {
     <form name="controlForm" id="controlForm">
     <div id="rotations">
     	
-    	X Rotation Input:
-    	<input class="control" type="text" value="0" id="rotX" name="rotX" size=3 />
-	<div class="slider-rot" id="slider-rotX" style="width:200px; margin-top: 4px;"></div>
+    	<div style="height:75px; width:auto;">
+    	<span style="float:left">X Rotation Input:
+    	<input class="control" type="text" value="0" id="rotX" name="rotX" size=3 /></span>
+		<div id="knobX" class="knob_control" style="float:right"></div>
+		</div>
     	</br>
-    	Y Rotation Input:
-    	<input class="control" type="text" value="0" id="rotY" name="rotY" size=3 />
-	<div class="slider-rot" id="slider-rotY" style="width:200px; margin-top: 4px;"></div>
+    	<div style="height:75px; width:auto;">
+    	<span style="float:left">Y Rotation Input:
+    	<input class="control" type="text" value="0" id="rotY" name="rotY" size=3 /></span>
+		<div id="knobY" class="knob_control" style="float:right"></div>
+		</div>
     	</br>
-    	Z Rotation Input:
-    	<input class="control" type="text" value="0" id="rotZ" name="rotZ" size=3 />
-	<div class="slider-rot" id="slider-rotZ" style="width:200px; margin-top: 4px;"></div>    	
+    	<div style="height:75px; width:auto;">
+    	<span style="float:left">Z Rotation Input:
+    	<input class="control" type="text" value="0" id="rotZ" name="rotZ" size=3 /></span>
+		<div id="knobZ" class="knob_control" style="float:right"></div>   
+		</div> 	
 	</div>
 	<div id="objname" style="visibility:hidden; height: 0px;">
 		Input object name:
@@ -464,6 +481,9 @@ li.a {
 	<input type="submit" style="visibility:visible; height: auto; width: auto;" value="Update Object"/>
 	</div>
 	</form>
+	
+
+</div>
     
 	
 	
@@ -476,7 +496,26 @@ li.a {
     </div>
     <p>
     <button id="submitCanvas" type="button" style="width:auto; height:40px">Submit This Scene</button>
+
 	<!-- This clearing element should immediately follow the #mainContent div in order to force the #container div to contain all child floats --><br class="clearfloat" />
 <!-- end #container --></div>
+<div id="tutorial_link" style="position:fixed; top:0px; right:10px;" onclick="$('#tutorial').html($('#tutorial_original').html()); $('#tutorial').dialog({height:700, width:600,position:'center',title:'Instructions'})"><u>View Instructions</u></div>
+
+<div id="tutorial"></div>
+<div id="tutorial_original" style="visibility:hidden; width:auto; height:0px;"><b>Please read these instructions carefully!</b>
+<p>Thank you for your interest! You are contributing to ongoing vision research at the Massachusetts Institute of Technology McGovern Institute for Brain Research.</p>
+<p><font color=red><b>This task will require you to look at images on your computer screen and click to indicate a response for up to about 45 minutes. If you cannot meet these requirements for any reason, or if doing so could cause discomfort or injury to you, do not accept this HIT.</p>
+<p>We encourage you to try a little bit of this  HIT before accepting to ensure it is compatible with your system. If you think the task is working improperly, your computer may be incompatible.</p></font></b>
+<p>We recommend this task for those who are interested in contributing to scientific endeavors. Your answers will help MIT researchers better understand how the brain processes visual information.</p>
+<center><p onclick="$('#tutorial').html($('#tutorial2').html())"><font color=blue><u>Click here to continue reading</u></font></p></center></div>
+<div id="tutorial2" style="visibility:hidden; width:auto; height:0px;">
+<p>This experiment will test your object recognition ability. </p>
+<center><p onclick="$('#tutorial').html($('#tutorial3').html())"><font color=blue><u>Click here to continue reading</u></font></p></center>
+</div>
+<div id="tutorial3" style="visibility:hidden; width:auto; height:0px;">
+<p>If you have questions or concerns about this HIT, feel free to contact the requester. You can re-read these instructions at any time by clicking the link in the upper right-hand corner of the screen. Good luck!</p>
+<center><font color=blue><u><p onclick="$('#tutorial').dialog('close')">Click here to close the instructions</p></center></font></u>
+</div>
+
 </body>
 </html>
