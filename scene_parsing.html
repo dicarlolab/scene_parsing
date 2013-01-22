@@ -146,13 +146,14 @@ li.a {
 										$(this).css({'background-color':'#FFFFBB'});
 										activeObj = newObj;
 										activeObj.populateParams();
-										resetKnobs();
 										});
 		$('#activeobjects li span').last().click(function() {
-										C.removeObj(newObj);
-										$(this).parent().fadeOut("slow");
-										C.createSpec();
-										C.showImg();
+										$(this).parent().fadeOut("fast", function() {
+																$(this).remove()
+																C.removeObj(newObj);
+																C.createSpec();
+																C.showImg();
+																					});
 										});
 										
 		$('#activeobjects li').css({'background-color':'#F3F3F3'}).last().css({'background-color':'#FFFFBB'});
@@ -175,6 +176,7 @@ li.a {
 		this.texture = [];
 		this.texture_mode = [];
 		this.internal_canonical = [];
+		hitKey = false;
 	
 	for (i = 0; i < this.myobjs.length; i++) {
 		this.tz.push(this.myobjs[i].tz);
@@ -222,7 +224,13 @@ li.a {
 	}	
 	
 	Canvas.prototype.removeObj = function(obj) {
-		this.myobjs.splice(jQuery.inArray(obj, this.myobjs), 1);	
+		this.myobjs.splice(jQuery.inArray(obj, this.myobjs), 1);
+		activeObj = this.myobjs[this.myobjs.length-1];
+		if (typeof(activeObj) != 'undefined') {
+			activeObj.populateParams();
+		}
+		console.log(activeObj)
+		$('#activeobjects li').last().css({'background-color':'#FFFFBB'});
 	}
 	
 	function ThreeDModel(newObjName) {
@@ -245,25 +253,39 @@ li.a {
 		this.rxy = parseInt($('#rotX').attr('value'));									
 		this.ryz = parseInt($('#rotY').attr('value'));	
 		this.rxz = parseInt($('#rotZ').attr('value'));	
-		this.obj = $('#objname_').attr('value');
-		this.s = parseFloat($('#scale').attr('value'));
-		this.ty = parseFloat($('#position_x').attr('value'));
-		this.tz = parseFloat($('#position_y').attr('value'));
+		this.s = parseFloat($('#scale').attr('value'));		
+		this.convertPixToStep(parseFloat($('#position_x').attr('value'))+275, 0)
+		this.convertPixToStep(parseFloat($('#position_y').attr('value'))+275, 1)		
 		this.tx = parseFloat($('#position_z').attr('value'));
+
 	}
 	
 	ThreeDModel.prototype.populateParams = function() {
 		$('#rotX').attr('value', this.rxy);
 		$('#rotY').attr('value', this.ryz);
 		$('#rotZ').attr('value', this.rxz);
-		$('#objname_').attr('value', this.obj);
 		$('#scale').attr('value', this.s);
-		$('#position_x').attr('value', this.ty);
-		$('#position_y').attr('value', this.tz);
+		$('#position_x').attr('value', this.init_pos[0][this.init_pos[0].length-1]-275);
+		$('#position_y').attr('value', this.init_pos[1][this.init_pos[1].length-1]-275);
 		$('#position_z').attr('value', this.tx);
 		$('#curr_bg').html(c.bgname);
+		resetKnobs();
+		resetSliders();
 	}
-		
+	
+	ThreeDModel.prototype.convertPixToStep = function(pixel, XorY) {
+		pos = pixel;
+		if (XorY == 0) {
+			this.init_pos[0].push(pos);
+			step_loc_x = (pos-275)*0.005505;
+			this.ty = step_loc_x;	
+			}
+		else if (XorY == 1) {
+			this.init_pos[1].push(pos);
+			step_loc_y = -1*(pos-275)*0.005505
+			this.tz = step_loc_y;
+			}		
+	}
 		
 	function dispImg(data) {	
 		$('#canvas').attr('src', data.url);
@@ -279,20 +301,16 @@ li.a {
 			activeObj.init_pos[0].push(pos_x);
 			activeObj.init_pos[1].push(pos_y);
 			
-			pix_change_x = pos_x - activeObj.init_pos[0][activeObj.init_pos[0].length-2];
-			pix_change_y = pos_y - activeObj.init_pos[1][activeObj.init_pos[1].length-2];
-			console.log(pix_change_x);
-			console.log(pix_change_y);
+			step_loc_x = (pos_x-275)*0.005505;
+			step_loc_y = -1*(pos_y-275)*0.005505;
+			activeObj.ty = step_loc_x;
+			activeObj.tz = step_loc_y;
 			
-			step_change_x = pix_change_x*0.005505;
-			step_change_y = pix_change_y*0.005505;
+			$('#position_x').attr('value', activeObj.init_pos[0].slice(-1)[0]-275);
+			$('#position_y').attr('value', activeObj.init_pos[1].slice(-1)[0]-275);
 			
-			activeObj.ty = activeObj.ty+step_change_x;
-			activeObj.tz = activeObj.tz-step_change_y;
-			
-			$('#position_x').attr('value',''+activeObj.ty);
-			$('#position_y').attr('value',''+activeObj.tz);
-			
+			hitKey = true;
+			resetSliders();
 			c.createSpec();
 			c.showImg();
 			
@@ -303,54 +321,74 @@ li.a {
 		$('.knob_control').html('');
 		$('#knobX').knobKnob({
 			snap: 0, 
-			value: $('#rotX').attr("value"),
+			value: activeObj.rxy,
 			turn: function(ratio){
-				$('#rotX').val(ratio*360);
+				var num = Math.round(ratio*360);
+				$('#rotX').val(num);
+				activeObj.rxy = num;
 				}
 		});
 		$('#knobY').knobKnob({
 			snap: 0,
-			value: $('#rotY').attr("value"),
+			value: activeObj.ryz,
 			turn: function(ratio){
-				$('#rotY').val(ratio*360);
+				var num = Math.round(ratio*360);
+				$('#rotY').val(num);
+				activeObj.ryz = num;
 				}
 		});
 		$('#knobZ').knobKnob({
 			snap: 0,
-			value: $('#rotZ').attr("value"),
+			value: activeObj.rxz,
 			turn: function(ratio){
-				$('#rotZ').val(ratio*360);
+				var num = Math.round(ratio*360);
+				$('#rotZ').val(num);
+				activeObj.rxz = num;
 				}
 		});
 	}
+	
 	function initKnobs() {
-		$('#knobX').knobKnob({
-			snap: 0, 
-			value: 0,
-			turn: function(ratio){
-				$('#rotX').val(ratio*360);
-				}
-		});
-		$('#knobY').knobKnob({
-			snap: 0,
-			value: 0,
-			turn: function(ratio){
-				$('#rotY').val(ratio*360);
-				}
-		});
-		$('#knobZ').knobKnob({
-			snap: 0,
-			value: 0,
-			turn: function(ratio){
-				$('#rotZ').val(ratio*360);
-				}
-		});
 		$('.knob_control').mouseup(function(){
-			activeObj.updateParams();
 			c.createSpec();
 			c.showImg();
 			});
 	};
+	
+	function initSliders() {
+		$('#position_x_slide').slider({
+			max: 550,
+			min: 0,
+			step: 1,
+			value: 275,
+			change: function(event, ui) {
+										if (!hitKey) {
+										activeObj.convertPixToStep(ui.value, 0);
+										c.createSpec();
+			  							c.showImg(); }
+			  							},
+			slide: function(event, ui) { $('#position_x').val(ui.value-275); }
+			  });
+		$('#position_y_slide').slider({
+			max: 550,
+			min: 0,
+			step: 1,
+			value: 275,
+			change: function(event, ui) {
+										if (!hitKey) {
+										activeObj.convertPixToStep(ui.value, 1);
+										c.createSpec();
+			  							c.showImg(); }
+			  							},
+			slide: function(event, ui) { $('#position_y').val(ui.value-275); }
+			  });	
+	}
+	
+	
+	function resetSliders() {
+		$('#position_x_slide').slider('value', activeObj.init_pos[0].slice(-1)[0]);
+		$('#position_y_slide').slider('value', activeObj.init_pos[1].slice(-1)[0]);
+	}
 
 	
 	$(document).ready( function() {		
@@ -359,19 +397,17 @@ li.a {
 		m = new ThreeDModel('schnauzer');
 		activeObj = m;		
 		c.addNewObj(m);
-		
-		n = new ThreeDModel('001M');
-		c.addNewObj(n);
-		
+				
 		c.createSpec();
 		c.showImg();
 		
 		randomObjs = ['001M', 'schnauzer', 'elephant', 'cargo', 'MB26901', '22_acoustic_guitar', 'Bathroom_Scale',
 			      'Soldier_pose01', 'leaves02', 'MB26893', 'Beverage_Machine' ];
 		
-		
 		$('#controlForm').submit(function() {activeObj.updateParams();
+									hitKey = true;
 									resetKnobs();
+									resetSliders();
 									c.createSpec();
 									c.showImg();
 									return false; }); 
@@ -393,9 +429,9 @@ li.a {
 								c.createSpec();
 								c.showImg();
 								});
-		
-		clickToMove();
 		initKnobs();
+		initSliders();
+		clickToMove();
 		
 		$('#enterNewObj').autocomplete({
 			source: full_obj_list
@@ -433,29 +469,46 @@ li.a {
   <div id="sidebar2">
     <h3 style="margin-bottom: 4px;">Controls Object Pose</h3>
     <form name="controlForm" id="controlForm">
-    <div id="rotations">
-    	
-    	<div style="height:75px; width:auto;">
-    	<span style="float:left">X Rotation Input:
-    	<input class="control" type="text" value="0" id="rotX" name="rotX" size=3 /></span>
-		<div id="knobX" class="knob_control" style="float:right"></div>
-		</div>
-    	</br>
-    	<div style="height:75px; width:auto;">
-    	<span style="float:left">Y Rotation Input:
-    	<input class="control" type="text" value="0" id="rotY" name="rotY" size=3 /></span>
-		<div id="knobY" class="knob_control" style="float:right"></div>
-		</div>
-    	</br>
-    	<div style="height:75px; width:auto;">
-    	<span style="float:left">Z Rotation Input:
-    	<input class="control" type="text" value="0" id="rotZ" name="rotZ" size=3 /></span>
+	<div id="rotations">
+	
+    	<table style="height:75px; width:auto;"><tr>
+	<td>
+    	<span>X Rotation Input:
+    	<input class="control" type="text" value="0" id="rotZ" name="rotZ" size=3 /><br />
+    	<img src="http://web.mit.edu/esolomon/www/scene_parsing/images/x_rotate.png" width=auto height=40 />
+    	</span>
+	</td>
+		<td>
 		<div id="knobZ" class="knob_control" style="float:right"></div>   
-		</div> 	
-	</div>
-	<div id="objname" style="visibility:hidden; height: 0px;">
-		Input object name:
-		<input class="control" id="objname_" size=15 type="text" name="objname_" value="schnauzer" />
+		</td>
+	</tr>
+	</table>
+	<br />
+    	<table style="height:75px; width:auto;"><tr>
+	<td>
+	<span>Y Rotation Input:
+    	<input class="control" type="text" value="0" id="rotX" name="rotX" size=3 /><br />
+    	<img src="http://web.mit.edu/esolomon/www/scene_parsing/images/y_rotate.png" width=auto height=40 />
+    	</span>
+	</td>
+		<td>
+		<div id="knobX" class="knob_control" style="float:right"></div>
+		</td>
+	</tr>
+	</table>
+	<br />
+    	<table style="height:75px; width:auto;"><tr>
+	<td>
+    	<span>Z Rotation Input:
+    	<input class="control" type="text" value="0" id="rotY" name="rotY" size=3 /><br />
+    	<img src="http://web.mit.edu/esolomon/www/scene_parsing/images/z_rotate.png" width=auto height=40 />
+    	</span>
+	</td>
+		<td>
+		<div id="knobY" class="knob_control" style="float:right"></div>
+		</td>
+	</tr>
+	</table>
 	</div>
 		
 	<h3 style="margin-bottom: 4px;">Scale</h3>
@@ -469,12 +522,15 @@ li.a {
 		<div id="position_container">
 			Input X (horizontal) position:
 			<input class="control" id="position_x" size=5 type="text" name="position_x" value="0" />
+			<div id="position_x_slide" class="pos_slider_XY" style="margin-top:10px;"></div>
 			<br />
 			Input Y (vertical) position:
 			<input class="control" id="position_y" size=5 type="text" name="position_y" value="0" />
+			<div id="position_y_slide" class="pos_slider_XY" style="margin-top:10px;"></div>
 			<br />
 			Input Z (Depth) position:
 			<input class="control" id="position_z" size=5 type="text" name="position_z" value="0" />
+			<div id="position_z_slide" class="pos_slider_Z" style="margin-top:10px;"></div>
 		</div>
 		<br/>
 	<div align="center">
