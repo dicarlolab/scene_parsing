@@ -1,0 +1,495 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Stacks of Images</title>
+
+<style>
+body { margin:0; padding: 0; font-family: 'trebuchet ms', trebuchet, verdana }
+div,pre { margin:0; padding:0 }
+h2 { margin: 20px 0 5px 0; padding: 0 }
+p.intro { margin: 0; padding: 15px; background: #eee; font-size: small; }
+.thumbs { position: absolute; width: 100px; height: 100px;}
+div.thumb { position:absolute; float:left; padding: 1px; width: 64px; height: 64px;}
+div.thumb img { border: 2px solid white; width:64px; height:64px; }
+
+div#tutorial {
+position:relative; 
+background-color: white;  
+padding: 10px;
+}
+
+</style>
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+<script type="text/javascript" language="JavaScript" src="http://web.mit.edu/esolomon/www/browserdetect.js"></script>
+<script type="text/javascript" src="http://web.mit.edu/esolomon/www/javascripts/jQueryRotate.2.2.js"></script>
+<script type="text/javascript" src="http://web.mit.edu/esolomon/www/javascripts/jQuery.mousewheel.js"></script>
+<script type="text/javascript" src="http://web.mit.edu/esolomon/www/javascripts/jquery.zoom-min.js"></script>
+<script type="text/javascript" src="http://web.mit.edu/esolomon/www/Dan_texture_task/groupings_dataset1.js"></script>
+<script type="text/javascript" src="http://web.mit.edu/esolomon/www/Dan_texture_task/imgFiles_shuffled_dataset1.js"></script>
+<script type="text/javascript" src="http://web.mit.edu/esolomon/www/zen.js"></script>
+<script type="text/javascript" src="http://esolomon.scripts.mit.edu/ip.php"></script>
+<script src="http://web.mit.edu/esolomon/www/javascripts/detect-zoom.js" type="text/javascript"></script>
+<link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+
+<script type="text/javascript">
+
+shuffle = function(o) { 
+	for(var j, x, i = o.length; i; j = parseInt(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
+	return o;
+  };
+  
+Array.prototype.flatten = function flatten(){
+   var flat = [];
+   for (var i = 0, l = this.length; i < l; i++){
+       var type = Object.prototype.toString.call(this[i]).split(' ').pop().split(']').shift().toLowerCase();
+       if (type) { flat = flat.concat(/^(array|collection|arguments|object)$/.test(type) ? flatten.call(this[i]) : this[i]); }
+   }
+   return flat;
+};
+
+function enlarge(obj) {
+	large=1;
+	L = $(obj).css('left'), T = $(obj).css('top');
+	obj_images = $(obj).find('img').not('.close');
+	obj_divs = $(obj).find('.thumb');
+	$('.thumbs').not(obj).hide();
+	$(obj).mousewheel(function() {});
+	$(obj_divs).css({position:'static'});
+	$(obj_images).each(function() {
+								$(this).rotate({animateTo:0, duration:400})
+								});
+	$(obj).animate({
+				   width: winW-200,
+				   height: '600px',
+				   left: '100px',
+				   top: '50px'
+				  },400);
+	$(obj_images).animate({
+					width: '200px',
+					height: '200px',
+						 },400, function() {
+							 });
+	$(obj_divs).animate({
+					padding: '100px'					
+						},400);
+	
+	$(obj_images).hover(function() {$(this).css({border:'2px solid blue'}) },
+						function() {$(this).css({border:'2px solid white'})}
+						);
+			
+	
+	$(obj).unbind('click');
+	$(obj).unbind('mouseenter'), $(obj).unbind('mouseleave');
+	$(obj).click(function() {
+						  shrink(obj)
+						  $('.thumbs').show();
+						  });
+	$('.close').show().click(function() {
+						  shrink(obj)
+						  $('.thumbs').show();
+						  });
+	$('.selectgroup').hide();
+}
+
+function shrink(obj) {
+	large=0;
+	obj_images = $(obj).find('img').not('.close');
+	$(obj_images).css({border:'2px solid white'});
+	obj_divs = $(obj).find('.thumb');
+	$(obj_images).each(function() {
+								$(this).rotate({animateTo:Math.floor((Math.random()*40)-20), duration:400})
+								});
+	$(obj).animate({
+				   width: '100px',
+				   height: '100px',
+				   left: L,
+				   top: T
+				  },400);
+	$(obj_images).animate({
+					width: '64px',
+					height: '64px',
+						 },400);
+	$(obj_divs).animate({
+					padding: '1px',
+						},400);
+	$(obj_divs).css({position:'absolute'});
+	
+	
+	$(obj_divs).each(function() {
+		 $(this).css({left:Math.floor((Math.random()*10)-5)+'px',top:Math.floor((Math.random()*10)-5)+'px'});
+							 });
+	setTimeout(function() {
+		$(obj).unbind('click');
+		$('.close').unbind('click');
+		$(obj).unbind('mouseenter'), $(obj).unbind('mouseleave');
+		hoverspread(obj);
+		$(obj).click(function() {
+						  	enlarge(obj)
+						  	});
+						  }, 400)
+						  
+		$('.close').hide();
+		$('.selectgroup').show();
+}
+
+function hoverspread(obj) {	
+	console.log('hover bound');
+	$(obj).each(function() {$(this).hover(
+					   function() {	
+					   hovertrack.push($(this).attr('id'));
+					   console.log('hover on');
+						   //scrollfunc(this);
+						   $(this).find('div').each(
+								function(){
+							$(this).animate({left:Math.floor((Math.random()*150)-75)+'px',top:Math.floor((Math.random()*150)-75)+'px'});
+$(this).children('img').animate({height:$(this).children('img').height()*1.5,width:$(this).children('img').width()*1.5});
+										});
+						   
+						     		   					   
+					   },
+					   function() {
+						   console.log('hover off');
+						   $(this).find('div').each(
+							function() {
+						   $(this).animate({left:Math.floor((Math.random()*70)-35)+'px',top:Math.floor((Math.random()*70)-35)+'px'});						   $(this).children('img').animate({height:'64px',width:'64px'});       
+					   });						   
+						   
+				})
+		});		
+
+}
+
+//!!==BEGIN DYNAMIC TRIAL CODE==!!//
+
+function beginExp() {
+	console.log('beginExp');
+	$("#begintask").hide(), $("#_preload").hide();
+	$('.selectgroup').bind('click', function(event) { event.stopPropagation() });
+	$('.selectgroup').click(function(){
+							   if (large==0) {
+							   trialEndTime = new Date();
+							   $('#group_container').hide();
+							   myval = $(this).attr('value');					   
+							   clicked(parseInt(myval));
+							   }
+							   else { };
+							   });
+	
+	$('#group_container').hide();
+	$('.fixation img').attr('src',fixationImage.src);
+	$('.fixation').show(); 
+	var thisStim = imgFiles_new[trialNumber];
+	$('#main_test').attr('src',thisStim);
+	setTimeout(function() {
+						showStim();
+						},ISI);
+}
+
+function showStim() {
+	console.log('showStim');
+	$('.test').show();	
+	$('.fixation').hide();
+	setTimeout(function() {
+						$('.test').hide();
+						setTimeout("showResponse()",ISI);
+						},stimduration);	
+}
+
+function showResponse() {
+	console.log('showResponse');
+	$('#group_container').show();
+	trialStartTime = new Date();
+	var thisStim = imgFiles_new[trialNumber+1];
+	$('#main_test').attr('src',thisStim);
+	
+}
+
+function clicked(myval) {
+	console.log('clicked');
+ pushData(myval)
+ $('.fixation img').attr('src',fixationImage.src);
+ $('.fixation').show(); 
+ endTrial();
+	
+}
+
+
+function pushData(myval) {
+	console.log('pushData');
+StimDone.push(imgFiles_new[trialNumber]);
+response.push(cat_names[myval]);
+trialDurations.push(trialEndTime - trialStartTime);
+}
+
+function endTrial() {
+  if (trialNumber >= (totalTrials-1))
+  {
+	var resultsobj = [];
+	resultsobj.push({
+					Response:response,
+					ImgOrder:imgFiles_new,
+					StimShown:StimDone,
+					Piles:groupings,
+					RT:trialDurations,
+					SubjBlock:subj_block,
+					Zoom:zoom,
+					IPaddress:user_IP,
+					Browser:BrowserDetect.browser,
+					Version:BrowserDetect.version,
+					OpSys:BrowserDetect.OS,
+					WindowHeight:winH,
+					WindowWidth:winW,
+					ScreenHeight:vertical,
+					ScreenWidth:horizontal
+					});	  
+	  
+	document.getElementById("assignmentId").value = aID;
+	document.getElementById("data").value = JSON.stringify(resultsobj);
+	document.getElementById("postdata").submit();	
+  }
+    else if (jQuery.inArray(trialNumber,BreakTimes) > -1) {
+	  takeABreak();
+  }
+  else
+  {
+    trialNumber++;
+    setTimeout(function() {showStim()},ISI);
+  }
+}
+
+function takeABreak() {
+	$('#main_test').attr('src',breakscreen.src);
+	$('.fixation').hide();
+	$('.test').show()
+	$('#_preload').html("<font color=red style=background-color:white>You have completed "+Math.round((trialNumber/totalTrials)*100)+"% of the experiment. Be sure to pay attention so that you know you can finish on time!");
+	$('#_preload').show();
+	document.onkeypress = function(e){  
+			var evtobj = window.event? event : e;
+			var unicode = evtobj.charCode? evtobj.charCode : evtobj.keyCode;
+			var actualKey = String.fromCharCode(unicode);
+				if (actualKey=='z'){
+					trialNumber++;
+					$('.test').hide()
+					$('#_preload').hide();
+					$('.fixation').show();	
+					var thisStim = imgFiles_new[trialNumber];
+					$('#main_test').attr('src',thisStim)	
+					setTimeout(function() {showStim()},ISI)};		
+		};
+	
+}
+
+//!!==END DYNAMIC TRIAL CODE==!!//
+
+
+function init_groups() {
+imgsPerStack = 8;
+
+	groupings = [ [],[],[],[],[],[],[],[],[] ];
+	randoms = shuffle(range(0,groupings_base[1].length-1));
+	
+	for (i=0; i < groupings_base.length; i++) {
+		for (j=0; j < imgsPerStack; j++) {
+			groupings[i] = groupings[i].concat(groupings_base[i][randoms[j]]);
+		}
+	shuffle(randoms);
+	}
+
+
+for (i=0; i < groupings.length; i++) {
+	groupings[i] = groupings[i].map(function(a) {
+	return "http://s3.amazonaws.com/dan_texture_task/dataset1/"+a;
+	});
+	
+}
+
+$(".test").css({'top':'150px','left':'0px'});
+$(".fixation").css({'top':'150px','left':'0px'});
+
+}
+
+
+function createGroup() {
+
+GroupsPerRow = 3
+numGroups = groupings.length;
+numGroups_inv = 1/(GroupsPerRow+1.3);
+numImages = 8; //Cannot exceed the # of images in each grouping
+
+for (i=0; i < numGroups; i++) {
+	if (i<GroupsPerRow) {
+	$('#group_container').append('<div class="thumbs" style="top:'+(100)*(Math.floor(i*(1/GroupsPerRow))+1)+'px; left:'+winW*((i%GroupsPerRow)+1)*numGroups_inv +'px;" id="group'+i+'" ></div>');
+			}
+	else {
+	$('#group_container').append('<div class="thumbs" style="top:'+((150)*(Math.floor(i*(1/GroupsPerRow))+1)+((Math.floor(i*(1/GroupsPerRow))-1)*50))+'px; left:'+winW*((i%GroupsPerRow)+1)*numGroups_inv +'px;" id="group'+i+'" ></div>');
+		}
+	
+	
+	for (j=0; j<numImages; j++) {
+		$('#group'+i+'').append('<div class="thumb" name="'+i+''+j+'"></div>');		
+	}
+	
+	
+	k=0;
+	$('#group'+i+' .thumb').each(function() {
+										  $(this).html('<img src="'+groupings[i][k]+'" />');
+										  k++;
+										  });
+	$('#group'+i+'').append('<div align="center"><button style="position:relative; top:-60px; z-index:100; height:50px;" class="selectgroup" value="'+i+'">Choose</button></div>');
+}
+
+$(document.body).append('<div class="close" style="position:fixed; top:'+(winH/2-120)+'px; left:'+(winW/2-25)+'px; z-index:502; width:100px; height:50px;"><img src="http://s3.amazonaws.com/dan_texture_task/backbutton.png" width="100" height="50" class="close"></div>');
+$('.close').hide();
+}
+
+function gup( name )
+{
+  name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+  var regexS = "[\\?&]"+name+"=([^&#]*)";
+  var regex = new RegExp( regexS );
+  var param = regex.exec( window.location.href );
+  if( param == null )
+    return "";
+  else
+    return param[1];
+}
+
+function init_vars() {
+	zoom = DetectZoom.zoom();
+	aID = gup("assignmentId");  
+	hovertrack = new Array();
+	response = new Array();
+	trialDurations = new Array();
+	StimDone = new Array();
+	imgFiles_new = new Array();
+	fixationImage = new Image;
+	fixationImage.src = "http://s3.amazonaws.com/human_training/fixation.png";
+	breakscreen = new Image;
+	breakscreen.src = "http://s3.amazonaws.com/monkeyimgs/2way_impute/break.png";
+	stimduration = 100;
+	ISI = 500;
+	trialNumber = 0;
+	totalTrials = 500;
+	BreakTimes = [Math.round(totalTrials/2)];
+	subj_block = 0; //Between 0 and 17 for 9000 images, 500 images per block.
+	cat_names = ['cars',
+ 		'cats_and_dogs',
+ 		'reptiles',
+ 		'guns',
+ 		'boats',
+ 		'planes',
+ 		'faces',
+ 		'chairs',
+ 		'tables'];
+}
+	
+function buildLib() {
+	//imgFiles = groupings_base.flatten();
+	//shuffle(imgFiles)
+	imgFiles = shuffle(imgFiles.slice(subj_block*500,(subj_block+1)*500));
+}
+
+function preload_resources() {
+	imgFiles_new = imgFiles.slice(0,totalTrials)
+		
+	imgFiles_new = imgFiles_new.map(function(a) {
+		return "http://s3.amazonaws.com/dan_texture_task/dataset1/"+a;
+	});				
+	
+}
+
+function animateImgs(){
+	$('div.thumb img').each(function() {
+						$(this).rotate(Math.floor((Math.random()*40)-20));
+									  });	
+	$('div.thumb').each(function() {
+								 $(this).css({left:Math.floor((Math.random()*70)-35)+'px',top:Math.floor((Math.random()*70)-35)+'px'});
+								 });
+	large=0;
+	all_stacks = $('.thumbs')
+	hoverspread(all_stacks);
+	
+	$('.thumbs').click(function() {
+		enlarge(this);
+	});
+}	
+
+function tutorial() {
+//Nothing here!
+}
+
+$(document).ready(function() {
+	
+	init_vars();
+	buildLib();
+	preload_resources();
+	
+	preload(imgFiles_new, function() {
+							   $("#begintask").click(function(){
+															  beginExp();
+															  });
+							   });		
+	init_groups();
+	createGroup();
+	$('.test').hide();
+	$('#warning').hide();
+	
+	animateImgs();
+	$("#tutorial").html($("#tutorial_original").html());
+	$("#tutorial").dialog({height:700,
+							width:600,
+							position:"center",
+							title:"Instructions"
+							});
+							
+	if (aID == "ASSIGNMENT_ID_NOT_AVAILABLE"){
+	$('#warning').show();
+	$('#warning').html("<font color=red style=background-color:white><b>You are in PREVIEW mode. Please ACCEPT this HIT to complete the task and receive payment.</b></font>")
+	}
+	
+});
+
+</script>
+
+</head>
+
+<body bgcolor="#7F7F7F">
+<div align="center" id="warning"></div>
+<div align="center"><button id="begintask" value="Begin!">Begin!</button></div></div>
+<div id="_preload" align="center" style="position:relative; z-index:300"></div>
+<div class="fixation" align="center" style="position:relative; z-index:201;"><img id="fixation_dot" src="" /></div>
+<div class="test" align="center" style="position:relative; z-index:200;"><img id="main_test" src="" /></div>
+<div id="group_container" align="center"></div>
+<div id="tutorial_link" style="position:fixed; top:0px; right:10px;" onclick="$('#tutorial').html($('#tutorial_original').html()); $('#tutorial').dialog({height:700,							width:600,position:'center',title:'Instructions'})"><u>View Instructions</u></div>
+
+<div id="tutorial" style="position:relative; z-index:-1"></div>
+<div id="tutorial_original" style="position:absolute; z-index:-1; visibility:hidden;"><b>Please read these instructions carefully!</b>
+<p>Thank you for your interest! You are contributing to ongoing vision research at the Massachusetts Institute of Technology McGovern Institute for Brain Research.</p>
+<p><font color=red><b>This task will require you to look at images on your computer screen and click to indicate a response for up to about 30 minutes. If you cannot meet these requirements for any reason, or if doing so could cause discomfort or injury to you, do not accept this HIT.</p>
+<p>We encourage you to try a little bit of this  HIT before accepting to ensure it is compatible with your system. If you think the task is working improperly, your computer may be incompatible.</p></font></b>
+<p>We recommend this task for those who are interested in contributing to scientific endeavors. Your answers will help MIT researchers better understand how the brain processes visual information.</p>
+<center><p onclick="$('#tutorial').html($('#tutorial2').html())"><font color=blue><u>Click here to continue reading</u></font></p></center></div>
+<div id="tutorial2" style="visibility:hidden; position:absolute; z-index:-1;">
+<p>This experiment will test your object recognition ability. You will see a series of images, each one presented for a very brief time. After you see an image, <b>you must select which "stack" or "pile" of images where it best belongs.</b></p>
+<p>You can see larger versions of the pictures in each pile by simply clicking the pile. Before beginning the task, you should look through the pictures in each pile. Click any picture, the "Back" button in the center, or anywhere else on the screen to close the large images when you want to move on to another pile.</p>
+<p>After the experiment begins, you may continue to look through the pictures in each pile, or you may simply click the "Choose" button above each pile if you believe the image belongs there. <b>You will discover that the pictures in each pile are of the same category, so you must match the category of the image to the category of the pile. There is <u>always</u> a category match</b></p>
+<p>As you work through the experiment, <b>the piles of pictures and their locations on the screen do not change</b>. Once you think you know which category is represented by each, you can simply click "Choose" and not inspect them in detail.</p>
+<center><p onclick="$('#tutorial').html($('#tutorial3').html())"><font color=blue><u>Click here to continue reading</u></font></p></center>
+</div>
+<div id="tutorial3" style="visibility:hidden; position:absolute; z-index:-1;">
+<p>Please be sure you can see 9 piles of images on your screen before beginning the experiment. When you are ready to begin, click the "Begin" button at the very top of the screen. Be prepared to see the first image -- it happens very fast!</p>
+<p><b>In total, you will see 500 images. We expect this experiment to take about 30 minutes.</b> Halfway through, we will give you a chance to take a short break and inform you of your progress. Note that the HIT will expire if you spend more than 1 hour, so plan your time accordingly.</p>
+<p>If you have questions or concerns about this HIT, feel free to contact the requester. You can re-read these instructions at any time by clicking the link in the upper right-hand corner of the screen. Good luck!</p>
+<center><font color=blue><u><p onclick="$('#tutorial').dialog('close')">Click here to close the instructions</p></center></font></u>
+</div>
+
+	<form style="visibility:hidden" id="postdata" action="http://www.mturk.com/mturk/externalSubmit" method="post">
+	<input type="text" name="data" id="data" value="">
+    <input type="text" name="assignmentId" id="assignmentId" value="">
+	</form>
+
+</body>
+</html>

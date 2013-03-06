@@ -1,0 +1,496 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Category Counting</title>
+
+<style>
+body { margin:0; padding: 0; font-family: 'trebuchet ms', trebuchet, verdana }
+div,pre { margin:0; padding:0 }
+h2 { margin: 20px 0 5px 0; padding: 0 }
+p.intro { margin: 0; padding: 15px; background: #eee; font-size: small; }
+.thumbs { position: absolute; width: 100px; height: 100px;}
+div.thumb { position:absolute; float:left; padding: 1px; width: 64px; height: 64px;}
+div.thumb img { border: 2px solid white; width:64px; height:64px; }
+
+div#tutorial {
+position:relative; 
+background-color: white;  
+padding: 10px;
+}
+
+</style>
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+<script type="text/javascript" language="JavaScript" src="http://web.mit.edu/esolomon/www/browserdetect.js"></script>
+<script type="text/javascript" src="http://web.mit.edu/esolomon/www/javascripts/jQueryRotate.2.2.js"></script>
+<script type="text/javascript" src="http://web.mit.edu/esolomon/www/javascripts/jQuery.mousewheel.js"></script>
+<script type="text/javascript" src="http://web.mit.edu/esolomon/www/javascripts/jquery.zoom-min.js"></script>
+<script type="text/javascript" src="http://web.mit.edu/esolomon/www/scene_parsing/scene_parsing_task8/group3.js"></script>
+<script type="text/javascript" src="http://web.mit.edu/esolomon/www/zen.js"></script>
+<script type="text/javascript" src="http://esolomon.scripts.mit.edu/ip.php"></script>
+<script src="http://web.mit.edu/esolomon/www/javascripts/detect-zoom.js" type="text/javascript"></script>
+<link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+
+<script type="text/javascript">
+
+shuffle = function(o) { 
+	for(var j, x, i = o.length; i; j = parseInt(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
+	return o;
+  };
+  
+Array.prototype.flatten = function flatten(){
+   var flat = [];
+   for (var i = 0, l = this.length; i < l; i++){
+       var type = Object.prototype.toString.call(this[i]).split(' ').pop().split(']').shift().toLowerCase();
+       if (type) { flat = flat.concat(/^(array|collection|arguments|object)$/.test(type) ? flatten.call(this[i]) : this[i]); }
+   }
+   return flat;
+};
+
+
+//!!==BEGIN DYNAMIC TRIAL CODE==!!//
+
+function beginExp() {
+	console.log('beginExp');
+	$("#begintask").hide(), $("#_preload").hide();
+	$('.inputcount').bind('click', function(event) { event.stopPropagation() });
+	$('#nextTrial').click(function(){
+							   
+							   trialEndTime = new Date();
+							   $('#group_container').hide();
+							   vals = []
+							   $('.inputcount').each(function() {
+							   							vals.push($(this).val())
+							   									});					   
+							   clicked(vals);
+
+							   });
+	
+	$('#group_container').hide();
+	$('.fixation img').attr('src',fixationImage.src);
+	$('.fixation').show(); 
+	var thisStim = imgFiles_new[trialNumber];
+	$('#main_test').attr('src',thisStim);
+	setTimeout(function() {
+						showStim();
+						},ISI);
+}
+
+function showStim() {
+	console.log('showStim');
+	$('.test').show();	
+	$('.fixation').hide();
+	$('#nextTrial').hide();
+	setTimeout(function() {
+						$('.test').hide();
+						setTimeout("showResponse()",ISI);
+						},stimduration);	
+}
+
+function showResponse() {
+	console.log('showResponse');
+	clickEvents = new Array();
+	clickTiming = new Array();
+	$('.inputcount').each(function() {$(this).val(0);});
+	$('#group_container').show();
+	$('#nextTrial').show();
+	$('#totalSeen').html('Total Objects Seen: 0');
+	$('#trialCounter').html('Progress: '+trialNumber+' of '+totalTrials);
+	trialStartTime = new Date();
+	var thisStim = imgFiles_new[trialNumber+1];
+	$('#main_test').attr('src',thisStim);
+	
+}
+
+function clicked(myval) {
+	console.log('clicked');
+ pushData(myval)
+ $('.fixation img').attr('src',fixationImage.src);
+ $('.fixation').show(); 
+ $('#nextTrial').hide();
+ endTrial();
+	
+}
+
+
+function pushData(myval) {
+	console.log('pushData');
+StimDone.push(imgFiles_new[trialNumber]);
+response.push(myval);
+trialDurations.push(trialEndTime - trialStartTime);
+clickEvents_rec.push(clickEvents);
+clickTiming_rec.push(clickTiming);
+}
+
+function endTrial() {
+  if (trialNumber >= (totalTrials-1))
+  {
+	var resultsobj = [];
+	resultsobj.push({
+					Response:response,
+					ImgOrder:imgFiles_new,
+					StimShown:StimDone,
+					ClickEvents:clickEvents_rec,
+					clickTiming:clickTiming_rec,
+					StimDuration:stimduration,
+					RT:trialDurations,
+					Zoom:zoom,
+					IPaddress:user_IP,
+					Browser:BrowserDetect.browser,
+					Version:BrowserDetect.version,
+					OpSys:BrowserDetect.OS,
+					WindowHeight:winH,
+					WindowWidth:winW,
+					ScreenHeight:vertical,
+					ScreenWidth:horizontal
+					});	  
+	  
+	document.getElementById("assignmentId").value = aID;
+	document.getElementById("data").value = JSON.stringify(resultsobj);
+	document.getElementById("postdata").submit();	
+  }
+    else if (jQuery.inArray(trialNumber,BreakTimes) > -1) {
+	  takeABreak();
+  }
+  else
+  {
+    trialNumber++;
+    setTimeout(function() {showStim()},ISI);
+  }
+}
+
+function takeABreak() {
+	$('#main_test').attr('src',breakscreen.src);
+	$('.fixation').hide();
+	$('.test').show()
+	$('#_preload').html("<font color=red style=background-color:white>You have completed "+Math.round((trialNumber/totalTrials)*100)+"% of the experiment. Be sure to pay attention so that you know you can finish on time!");
+	$('#_preload').show();
+	document.onkeypress = function(e){  
+			var evtobj = window.event? event : e;
+			var unicode = evtobj.charCode? evtobj.charCode : evtobj.keyCode;
+			var actualKey = String.fromCharCode(unicode);
+				if (actualKey=='z'){
+					trialNumber++;
+					$('.test').hide()
+					$('#_preload').hide();
+					$('.fixation').show();	
+					var thisStim = imgFiles_new[trialNumber];
+					$('#main_test').attr('src',thisStim)	
+					setTimeout(function() {showStim()},ISI)};		
+		};
+	
+}
+
+//!!==END DYNAMIC TRIAL CODE==!!//
+
+
+function init_groups() {
+imgsPerStack = 8;
+
+	groupings = [ [],[],[],[],[],[],[],[],[] ];
+	randoms = shuffle(range(0,groupings_base[1].length-1));
+	
+	for (i=0; i < groupings_base.length; i++) {
+		for (j=0; j < imgsPerStack; j++) {
+			groupings[i] = groupings[i].concat(groupings_base[i][randoms[j]]);
+		}
+	shuffle(randoms);
+	}
+
+
+for (i=0; i < groupings.length; i++) {
+	groupings[i] = groupings[i].map(function(a) {
+	return "http://s3.amazonaws.com/dan_texture_task/dataset1/"+a;
+	});
+	
+}
+
+$(".test").css({'top':'150px','left':'0px'});
+$(".fixation").css({'top':'150px','left':'0px'});
+
+}
+
+
+function createGroup() {
+
+GroupsPerRow = 3
+numGroups = groupings.length;
+numGroups_inv = 1/(GroupsPerRow+1.3);
+numImages = 8; //Cannot exceed the # of images in each grouping
+
+for (i=0; i < numGroups; i++) {
+	if (i<GroupsPerRow) {
+	$('#group_container').append('<div class="thumbs" style="top:'+(100)*(Math.floor(i*(1/GroupsPerRow))+1)+'px; left:'+winW*((i%GroupsPerRow)+1)*numGroups_inv +'px;" id="group'+i+'" ></div>');
+			}
+	else {
+	$('#group_container').append('<div class="thumbs" style="top:'+((150)*(Math.floor(i*(1/GroupsPerRow))+1)+((Math.floor(i*(1/GroupsPerRow))-1)*50))+'px; left:'+winW*((i%GroupsPerRow)+1)*numGroups_inv +'px;" id="group'+i+'" ></div>');
+		}
+	
+	
+	for (j=0; j<numImages; j++) {
+		$('#group'+i+'').append('<div class="thumb" name="'+i+''+j+'"></div>');		
+	}
+	
+	
+	k=0;
+	$('#group'+i+' .thumb').each(function() {
+										  $(this).html('<img src="'+groupings[i][k]+'" />');
+										  k++;
+										  });
+	$('#group'+i+'').append('<div align="center"><span class="incButtons" style="background-color: #000000; position:relative; top:-60px; z-index:100; float:right;"><input style="height:20px; width:30px;" class="inputcount" value="0" type="text" maxlength="3" id="inp'+i+'" /><button class="plus" id="bp'+i+'" onclick="assignPlus('+i+')">+</button><button class="minus" id="bm'+i+'" onclick="assignMinus('+i+')">-</button></span></div>');
+}
+
+$(document.body).append('<div class="close" style="position:fixed; top:'+(winH/2-120)+'px; left:'+(winW/2-25)+'px; z-index:502; width:100px; height:50px;"><img src="http://s3.amazonaws.com/dan_texture_task/backbutton.png" width="100" height="50" class="close"></div>');
+$('.close').hide();
+}
+
+function gup( name )
+{
+  name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+  var regexS = "[\\?&]"+name+"=([^&#]*)";
+  var regex = new RegExp( regexS );
+  var param = regex.exec( window.location.href );
+  if( param == null )
+    return "";
+  else
+    return param[1];
+}
+
+function init_vars() {
+	zoom = DetectZoom.zoom();
+	aID = gup("assignmentId");  
+	clickEvents = new Array();
+	clickEvents_rec = new Array();
+	clickTiming = new Array();
+	clickTiming_rec = new Array();
+	response = new Array();
+	trialDurations = new Array();
+	trialStartTime = new Date();
+	StimDone = new Array();
+	imgFiles_new = new Array();
+	fixationImage = new Image;
+	fixationImage.src = "http://s3.amazonaws.com/human_training/fixation.png";
+	breakscreen = new Image;
+	breakscreen.src = "http://s3.amazonaws.com/monkeyimgs/2way_impute/break.png";
+	stimduration = 500;
+	ISI = 500;
+	trialNumber = 0;
+	totalTrials = 500;
+	BreakTimes = [Math.round(totalTrials/2)];
+}
+	
+function buildLib() {
+	//imgFiles = groupings_base.flatten();
+	//shuffle(imgFiles)
+	//imgFiles = shuffle(imgFiles);
+}
+
+function preload_resources() {
+	imgFiles_new = imgFiles.slice(0,totalTrials)
+		
+	//imgFiles_new = imgFiles_new.map(function(a) {
+	//	return "http://s3.amazonaws.com/dan_texture_task/dataset1/"+a;
+	//});				
+	
+}
+
+function animateImgs(){
+	$('div.thumb img').each(function() {
+						$(this).rotate(Math.floor((Math.random()*40)-20));
+									  });	
+	$('div.thumb').each(function() {
+								 $(this).css({left:Math.floor((Math.random()*70)-35)+'px',top:Math.floor((Math.random()*70)-35)+'px'});
+								 });
+	large=0;
+	all_stacks = $('.thumbs')
+	hoverspread(all_stacks);
+	
+	$('.thumbs').click(function() {
+		enlarge(this);
+	});
+}	
+
+function tutorial() {
+//Nothing here!
+}
+
+function assignPlus(num){
+	var curVal = parseInt($('#inp'+num).val());
+	$('#inp'+num).val(curVal+1);
+	clickEvents.push(num+'+');
+	time = new Date();
+	clickTiming.push(time-trialStartTime)
+	incCounter()
+}
+function assignMinus(num){
+	var curVal = parseInt($('#inp'+num).val());
+	$('#inp'+num).val(curVal-1);
+	clickEvents.push(num+'-');
+	time = new Date();
+	clickTiming.push(time-trialStartTime)
+	incCounter()
+	
+}
+function incCounter() {
+	var totalSum = 0;
+	$('.inputcount').each(function() {totalSum = totalSum + parseInt($(this).val())})
+	console.log(totalSum)
+	$('#totalSeen').html('Total Objects Seen: '+totalSum);
+	return
+}
+	
+
+$(document).ready(function() {
+	
+	init_vars();
+	buildLib();
+	preload_resources();
+	
+	preload(imgFiles_new, function() {
+							   $("#begintask").click(function(){
+															  beginExp();
+															  });
+							   });		
+	//init_groups();
+	//createGroup();
+	//assignButtons();
+	$('.plus').bind('click', function(event) { event.stopPropagation() });
+	$('.minus').bind('click', function(event) { event.stopPropagation() });
+	
+	$('.test').hide();
+	$('#warning').hide();
+	$('#nextTrial').hide();
+		
+	//animateImgs();
+	$("#tutorial").html($("#tutorial_original").html());
+	$("#tutorial").dialog({height:700,
+							width:600,
+							position:"center",
+							title:"Instructions"
+							});
+							
+	if (aID == "ASSIGNMENT_ID_NOT_AVAILABLE"){
+	$('#warning').show();
+	$('#warning').html("<font color=red style=background-color:white><b>You are in PREVIEW mode. Please ACCEPT this HIT to complete the task and receive payment.</b></font>")
+	}
+	
+});
+
+</script>
+
+</head>
+
+<body bgcolor="#7F7F7F">
+<div align="center" id="warning"></div>
+<div align="center"><button id="begintask" value="Begin!">Begin!</button></div></div>
+<div id="_preload" align="center" style="position:fixed; top:0px; left:10px;"></div>
+<div class="fixation" align="center" style="position:relative; z-index:201; top:225px; left:-15px;"><img id="fixation_dot" src="" /></div>
+<div class="test" align="center" style="position:relative; z-index:200; top:125px; left:-15px;"><img id="main_test" src="" /></div>
+<div id="group_container" align="center">
+<table width="800" cellpadding="0" cellspacing="0" height="500" border="0" align="center" style="visibility:visible" id="responsetable">
+  <tr>
+    <td align="center"><img height=200 width=200 src ="http://s3.amazonaws.com/384selections/Variation00_nobg/animals/bear_rx%2B00.000_ry%2B90.000_rz%2B00.000_tx%2B00.000_ty%2B00.000_s%2B00.800_fd9cf629ba3f5c7f127404739f555bf381fe7a32_150x150.png" onclick="assignPlus(1)" />
+    <br/>
+    <div style="position:relative; top:-50px;">
+    <span class="incButtons"><input style="height:20px; width:30px;" class="inputcount" value="0" type="text" maxlength="3" id="inp1" /><button class="plus" id="bp1" onclick="assignPlus(1)">+</button><button class="minus" id="bm1" onclick="assignMinus(1)">-</button></span><br/>Animals
+    </div>
+    </td>
+    <td align="center"><img height=200 width=200 src ="http://s3.amazonaws.com/384selections/Variation00_nobg/boats/BAHRAIN_rx%2B00.000_ry%2B00.000_rz%2B00.000_tx%2B00.000_ty%2B00.000_s%2B01.200_bcbfb7f6f104bdba7d62908b5eb5e1ba232da6d3_150x150.png" onclick="assignPlus(2)"/>
+    <br/>
+    <div style="position:relative; top:-50px;">
+    <span class="incButtons"><input style="height:20px; width:30px;" class="inputcount" value="0" type="text" maxlength="3" id="inp2" /><button class="plus" id="bp2" onclick="assignPlus(2)">+</button><button class="minus" id="bm2" onclick="assignMinus(2)">-</button></span><br/>Boats
+    </div></td>
+    <td align="center"><img height=200 width=200 src ="http://s3.amazonaws.com/384selections/Variation00_nobg/cars/alfa155_rx%2B00.000_ry%2B00.000_rz%2B00.000_tx%2B00.000_ty%2B00.000_s%2B01.000_5a93409f4f5c7c3b3261090530ee4c7cdfebf57a_150x150.png" onclick="assignPlus(3)"/>
+    <br/>
+    <div style="position:relative; top:-50px;">
+    <span class="incButtons"><input style="height:20px; width:30px;" class="inputcount" value="0" type="text" maxlength="3" id="inp3" /><button class="plus" id="bp3" onclick="assignPlus(3)">+</button><button class="minus" id="bm3" onclick="assignMinus(3)">-</button></span><br/>Cars
+    </div></td>
+  </tr>
+  <tr>
+    <td align="center"><img style="position:relative; top:-50px;" height=200 width=200 src ="http://s3.amazonaws.com/384selections/Variation00_nobg/chairs/_001_rx%2B00.000_ry%2B00.000_rz%2B00.000_tx%2B00.000_ty%2B00.000_s%2B00.700_10b0bff2f9b7f0a853edac7ed9b5e2d737da033a_150x150.png" onclick="assignPlus(4)"/>
+    <br/>
+    <div style="position:relative; top:-100px;">
+    <span class="incButtons"><input style="height:20px; width:30px;" class="inputcount" value="0" type="text" maxlength="3" id="inp4" /><button class="plus" id="bp4" onclick="assignPlus(4)">+</button><button class="minus" id="bm4" onclick="assignMinus(4)">-</button></span><br/>Chairs
+    </span>
+    </td>
+    <td width="100" height="100" align="left" style="vertical-align:center;">
+    <div align="center" style="font-size:larger; margin-bottom:0px; position:relative; top:-30px;" id="totalSeen"><b>Note:</b> You can also click on the pictures above the counters to add 1.</div>
+    <center style="margin-top:15px; position:relative; top:-30px;"><button style="height:50px;" id="nextTrial">Go To Next Trial</button>
+    <div id="trialCounter"></div>
+    </center>
+	</td>
+    <td align="center"><img style="position:relative; top:-50px;" height=200 width=200 src ="http://s3.amazonaws.com/384selections/Variation00_nobg/faces/face0001_rx%2B00.000_ry%2B00.000_rz%2B00.000_tx%2B00.000_ty%2B00.000_s%2B01.000_0c0d7402273188a7ed2d91dbef4baf75554c2017_150x150.png" onclick="assignPlus(5)"/>
+    <br/>
+    <div style="position:relative; top:-100px;">
+    <span class="incButtons"><input style="height:20px; width:30px;" class="inputcount" value="0" type="text" maxlength="3" id="inp5" /><button class="plus" id="bp5" onclick="assignPlus(5)">+</button><button class="minus" id="bm5" onclick="assignMinus(5)">-</button></span><br/>Faces
+    </span>
+    </td>
+  </tr>
+  <tr>
+    <td align="center"><img style="position:relative; top:-100px;" height=200 width=200 src ="http://s3.amazonaws.com/384selections/Variation00_nobg/fruits/Apple_Fruit_obj_rx-90.000_ry%2B00.000_rz%2B00.000_tx%2B00.000_ty%2B00.000_s%2B00.700_99d1e850e215676eff1d7db3ba4e156370a81663_150x150.png" onclick="assignPlus(6)"/>
+    <br/>
+    <div style="position:relative; top:-150px;">
+    <span class="incButtons"><input style="height:20px; width:30px;" class="inputcount" value="0" type="text" maxlength="3" id="inp6" /><button class="plus" id="bp6" onclick="assignPlus(6)">+</button><button class="minus" id="bm6" onclick="assignMinus(6)">-</button></span><br/>Fruits
+    </span>
+    </td>
+    <td align="center"><img style="position:relative; top:-100px;" height=200 width=200 src ="http://s3.amazonaws.com/384selections/Variation00_nobg/planes/_01_Airliner_2jetEngines_rx%2B00.000_ry%2B90.000_rz%2B90.000_tx%2B00.000_ty%2B00.000_s%2B01.300_2f044ae294a23fee6bbe2b7bc0be610726abe88b_150x150.png" onclick="assignPlus(7)"/>
+    <br/>
+    <div style="position:relative; top:-150px;">
+    <span class="incButtons"><input style="height:20px; width:30px;" class="inputcount" value="0" type="text" maxlength="3" id="inp7" /><button class="plus" id="bp7" onclick="assignPlus(7)">+</button><button class="minus" id="bm7" onclick="assignMinus(7)">-</button></span><br/>Planes
+    </span></td>
+    <td align="center"><img style="position:relative; top:-100px;" height=200 width=200 src ="http://s3.amazonaws.com/384selections/Variation00_nobg/tables/_08_rx%2B00.000_ry%2B00.000_rz%2B00.000_tx%2B00.000_ty%2B00.000_s%2B00.700_b69a1345364079ad15436e629e52e02e050dbf2b_150x150.png" onclick="assignPlus(8)"/>
+    <br/>
+    <div style="position:relative; top:-150px;">
+    <span class="incButtons"><input style="height:20px; width:30px;" class="inputcount" value="0" type="text" maxlength="3" id="inp8" /><button class="plus" id="bp8" onclick="assignPlus(8)">+</button><button class="minus" id="bm8" onclick="assignMinus(8)">-</button></span><br/>Tables
+    </span></td>
+  </tr>
+</table>
+</div>
+
+<div id="tutorial_link" style="position:fixed; top:0px; right:10px;" onclick="$('#tutorial').html($('#tutorial_original').html()); $('#tutorial').dialog({height:700,							width:600,position:'center',title:'Instructions'})"><u>View Instructions</u></div>
+
+<div id="tutorial" style="position:relative; z-index:-1"></div>
+<div id="tutorial_original" style="position:absolute; z-index:-1; visibility:hidden;"><b>Please read these instructions carefully!</b>
+<p>Thank you for your interest! You are contributing to ongoing vision research at the Massachusetts Institute of Technology McGovern Institute for Brain Research.</p>
+<p><font color=red><b>This task will require you to look at images on your computer screen and click to indicate a response for up to about 30 minutes. If you cannot meet these requirements for any reason, or if doing so could cause discomfort or injury to you, do not accept this HIT.</p>
+<p>We encourage you to try a little bit of this  HIT before accepting to ensure it is compatible with your system. If you think the task is working improperly, your computer may be incompatible.</p></font></b>
+<p>We recommend this task for those who are interested in contributing to scientific endeavors. Your answers will help MIT researchers better understand how the brain processes visual information.</p>
+<center><p onclick="$('#tutorial').html($('#tutorial2').html())"><font color=blue><u>Click here to continue reading</u></font></p></center></div>
+<div id="tutorial2" style="visibility:hidden; position:absolute; z-index:-1;">
+<ul>
+<li>You will see a series of images, each one presented for a very brief time. The images may contain one or more objects in eight target categories: <b>Animals, Boats, Cars, Chairs, Faces, Fruits, Planes and Tables.</b></li>
+<p>
+<li>Some of the images will contain no objects, while others will contain one or several.  Any image will contain at most 3 objects, though sometimes there may be several objects of the same category in a single image. </li>
+<p>
+<li>After you see an image, <b>you must indicate how many of each type of object you saw.</b> The response screen will show a counter for each target category, which you will use to indicate your choice.</li>
+<p>
+<li>For example, if you saw two Animals and a Table, set the Animals counter to 2 and the Table counter to 1. If there are no target objects in the image, leave all the counters at 0 and just move on to the next trial.</li>
+<p>
+<li>Even if you're not 100% sure of the categories of some of the objects you saw, <u><b>make your best guess.</b></u> Always try to ensure that the <u>total</u> count of objects is accurate to your best guess even when you're not totally certain you got all the category identifications correct.</li>
+</ul>
+<center><p onclick="$('#tutorial').html($('#tutorial3').html())"><font color=blue><u>Click here to continue reading</u></font></p></center>
+</div>
+<div id="tutorial3" style="visibility:hidden; position:absolute; z-index:-1;">
+<ul>
+<li>Sometimes the objects will be presented on a complex background that is taken from a real-life scene, while other times the objects will be presented on a blank white background. Any foreground object in the image will <u>always</u> match one of the 8 options. We are not interested in your responses to the background.</li>
+<p>
+<li>Please be sure you can see 8 image/word counters on your screen before beginning the experiment. As you work through the experiment, the layout arrangement of the response screen will not change.</li>
+<p>
+<li><b>In total, you will see 500 images. We expect this experiment to take about 30 minutes.</b> Halfway through, we will give you a chance to take a short break and inform you of your progress. Note that the HIT will expire if you spend more than 1 hour, so plan your time accordingly.</li>
+<p>
+<li>When you are ready to begin, click the "Begin" button at the very top of the screen. <b>Be prepared to see the first image -- it happens very fast!</b></li>
+<p>
+<li>If you have questions or concerns about this HIT, feel free to contact the requester. You can re-read these instructions at any time by clicking the link in the upper right-hand corner of the screen. Good luck!</li>
+</ul>
+<center><font color=blue><u><p onclick="$('#tutorial').dialog('close')">Click here to close the instructions</p></center></font></u>
+</div>
+
+	<form style="visibility:hidden" id="postdata" action="https://www.mturk.com/mturk/externalSubmit" method="post">
+	<input type="text" name="data" id="data" value="">
+    <input type="text" name="assignmentId" id="assignmentId" value="">
+	</form>
+
+</body>
+</html>

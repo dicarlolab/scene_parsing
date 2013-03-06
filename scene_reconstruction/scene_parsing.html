@@ -125,9 +125,9 @@ li.a {
 		this.myobjs = [];
 	
 		this.preproc_init = {"dtype": "uint8",
-					 "size": [512, 512, 3],
+					 "size": [512, 512],
 					 "normalize": false,
-					 "mode": "RGB"};
+					 "mode": "L"};
 					 
 		this.bgname = "whitebg.jpg";
 		this.bgpsi = 0.0;
@@ -144,7 +144,7 @@ li.a {
 		$('#activeobjects li').last().click(function() {
 										$('#activeobjects li').css({'background-color':'#F3F3F3'});
 										$(this).css({'background-color':'#FFFFBB'});
-										activeObj = newObj;
+										activeObj = newObj;										
 										activeObj.populateParams();
 										});
 		$('#activeobjects li span').last().click(function() {
@@ -176,7 +176,6 @@ li.a {
 		this.texture = [];
 		this.texture_mode = [];
 		this.internal_canonical = [];
-		hitKey = false;
 	
 	for (i = 0; i < this.myobjs.length; i++) {
 		this.tz.push(this.myobjs[i].tz);
@@ -212,7 +211,7 @@ li.a {
 	
 	Canvas.prototype.showImg = function() {
 		imgObj = {preproc:JSON.stringify(this.preproc_init), spec:JSON.stringify(this.spec_init)};		  	
-		
+		console.log('Contacting Server...');
 		$.ajax({
 			url:'http://50.19.109.25:27719/renderimage',
 			dataType: 'jsonp',
@@ -309,7 +308,6 @@ li.a {
 			$('#position_x').attr('value', activeObj.init_pos[0].slice(-1)[0]-275);
 			$('#position_y').attr('value', activeObj.init_pos[1].slice(-1)[0]-275);
 			
-			hitKey = true;
 			resetSliders();
 			c.createSpec();
 			c.showImg();
@@ -362,26 +360,34 @@ li.a {
 			step: 1,
 			value: 275,
 			change: function(event, ui) {
-										if (!hitKey) {
+										if (MoveSlide) {
+										console.log('Slider Change!');
 										activeObj.convertPixToStep(ui.value, 0);
 										c.createSpec();
-			  							c.showImg(); }
+			  							c.showImg();
+			  							MoveSlide = false; }
 			  							},
 			slide: function(event, ui) { $('#position_x').val(ui.value-275); }
-			  });
+			  }).mousedown(function() {console.log('Slider Clicked');
+			  						   MoveSlide = true;
+			  						   });	;
 		$('#position_y_slide').slider({
 			max: 550,
 			min: 0,
 			step: 1,
 			value: 275,
 			change: function(event, ui) {
-										if (!hitKey) {
+										if (MoveSlide) {
+										console.log('Slider Change!');
 										activeObj.convertPixToStep(ui.value, 1);
 										c.createSpec();
-			  							c.showImg(); }
+			  							c.showImg();
+			  							MoveSlide = false; }
 			  							},
 			slide: function(event, ui) { $('#position_y').val(ui.value-275); }
-			  });	
+			  }).mousedown(function() {console.log('Slider Clicked');
+			  						   MoveSlide = true;
+			  						   });	
 	}
 	
 	
@@ -397,15 +403,15 @@ li.a {
 		m = new ThreeDModel('schnauzer');
 		activeObj = m;		
 		c.addNewObj(m);
+		MoveSlide = false;
 				
-		c.createSpec();
-		c.showImg();
+		//c.createSpec();
+		//c.showImg();
 		
 		randomObjs = ['001M', 'schnauzer', 'elephant', 'cargo', 'MB26901', '22_acoustic_guitar', 'Bathroom_Scale',
 			      'Soldier_pose01', 'leaves02', 'MB26893', 'Beverage_Machine' ];
 		
 		$('#controlForm').submit(function() {activeObj.updateParams();
-									hitKey = true;
 									resetKnobs();
 									resetSliders();
 									c.createSpec();
@@ -413,8 +419,8 @@ li.a {
 									return false; }); 
 		$('#newObj').submit(function() {
 								c.addNewObj(new ThreeDModel($('#enterNewObj').attr('value')));
-								c.createSpec();
-								c.showImg();
+								//c.createSpec();
+								//c.showImg();
 								return false;
 								});
 		$('#addNewObjLink').click(function() {		
