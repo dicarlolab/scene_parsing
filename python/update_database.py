@@ -12,43 +12,44 @@ def updateDB(datafiles, comment, metadata):
 	print('Parsing data file...')
 	subj_data, column_labels = parse_human_data(datafiles, comment)
 	
-	print('Decoding image URLs (this may take a moment)...')
-	for subj in subj_data:
-		stims = subj['ImgOrder']
-		decode = []
-		for stim in stims:
-			if type(stim) == list:
-				for s in stim:
-					d = meta[meta['id'] == s.split('/')[-1].split('.')[0]]
+	if metadata != None:
+		print('Decoding image URLs (this may take a moment)...')
+		for subj in subj_data:
+			stims = subj['ImgOrder']
+			decode = []
+			for stim in stims:
+				if type(stim) == list:
+					for s in stim:
+						d = meta[meta['id'] == s.split('/')[-1].split('.')[0]]
+						if len(d) >= 1:
+							decode.append(list(d[0]))
+							for idx, data in enumerate(decode[-1]):
+								if isinstance(data, np.floating):
+									decode[-1][idx] = float(data)
+								elif isinstance(data, np.integer):
+									decode[-1][idx] = int(data)
+								else:
+									pass
+						else:
+							pass
+				elif type(stim) == str or unicode:
+					d = meta[meta['id'] == stim.split('/')[-1].split('.')[0]]
 					if len(d) >= 1:
 						decode.append(list(d[0]))
 						for idx, data in enumerate(decode[-1]):
-							if isinstance(data, np.floating):
-								decode[-1][idx] = float(data)
-							elif isinstance(data, np.integer):
-								decode[-1][idx] = int(data)
-							else:
-								pass
+								if isinstance(data, np.floating):
+									decode[-1][idx] = float(data)
+								elif isinstance(data, np.integer):
+									decode[-1][idx] = int(data)
+								else:
+									pass
 					else:
 						pass
-			elif type(stim) == str or unicode:
-				d = meta[meta['id'] == stim.split('/')[-1].split('.')[0]]
-				if len(d) >= 1:
-					decode.append(list(d[0]))
-					for idx, data in enumerate(decode[-1]):
-							if isinstance(data, np.floating):
-								decode[-1][idx] = float(data)
-							elif isinstance(data, np.integer):
-								decode[-1][idx] = int(data)
-							else:
-								pass
 				else:
-					pass
-			else:
-				print('Result type not recognized')
-				
-			subj['ImgDecode'] = decode
-			subj['meta_dtype'] = str(meta[0].dtype)
+					print('Result type not recognized')
+					
+				subj['ImgDecode'] = decode
+				subj['meta_dtype'] = str(meta[0].dtype)
 			
 	#open database
 	print('Connecting to database...')
