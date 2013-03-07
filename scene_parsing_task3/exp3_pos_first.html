@@ -91,12 +91,18 @@ function showStim() {
 
 function showResponse() {
 	console.log('showResponse');
-	$('#totalSeen').html('Which object did you see?');
+	
+	table_HTML = $('#responsetable').html();	
+	$('#leftsquare').html('<div style="position:relative; top:125px; height:200px; width:200px;" ><button onclick="sayBehind()">Object Behind</button></div>');
+	$('#rightsquare').html('<div style="position:relative; top:125px; height:200px; width:200px" src ="frontfence.png" ><button onclick="sayFront()">Object in Front</button></div>');
+	$('#totalSeen').html('Where was the object?').css({'top':'40px'});
+	$('#trialCounter').css({'top':'42px'});	
+	$('.tbrow').hide();
+	$('#trialCounter').html('Progress: '+trialNumber+' of '+totalTrials);
+		
 	clickEvents = new Array();
 	clickTiming = new Array();
 	$('#group_container').show();
-	$('#nextTrial').show();
-	$('#trialCounter').html('Progress: '+trialNumber+' of '+totalTrials);
 	trialStartTime = new Date();
 	var thisStim = imgFiles_new[trialNumber+1];
 	$('#main_test').attr('src',thisStim);
@@ -323,22 +329,11 @@ function nextq(obj){
 	clickEvents.push(obj);
 	time = new Date();
 	clickTiming.push(time-trialStartTime);
-	table_HTML = $('#responsetable').html();
+	trialEndTime = new Date();
+	$('#group_container').hide();
+	clicked(clickEvents[1]);
 	
-	$('#leftsquare').html('<div onclick="sayBehind()" style="position:relative; top:125px; height:200px; width:200px;" ><button>Object Behind</button></div>');
-	$('#rightsquare').html('<div style="position:relative; top:125px; height:200px; width:200px" src ="frontfence.png" onclick="sayFront()"><button>Object in Front</button></div>');
-	$('#totalSeen').html('Where was the object?').css({'top':'40px'});
-	$('#trialCounter').css({'top':'42px'});
 	
-	$('.tbrow').hide();
-	
-	if (oneQ == true) {
-		trialEndTime = new Date();
-		$('#group_container').hide();
-		clicked(clickEvents[0]);
-	}
-	else {
-	}
 	
 }
 
@@ -346,18 +341,34 @@ function sayFront() {
 	clickEvents.push('front');
 	time = new Date();
 	clickTiming.push(time-trialStartTime);
-	trialEndTime = new Date();
-	$('#group_container').hide();
-	clicked(clickEvents[0]);
+	
+	if (oneQ == true) {
+		trialEndTime = new Date();
+		$('#group_container').hide();
+		clicked(clickEvents[0]);
+	}
+	else {
+	$('#responsetable').html(table_HTML);
+	$('#trialCounter').html('Progress: '+trialNumber+' of '+totalTrials);
+	$('#totalSeen').html('Which object did you see?');
+	}
 }
 
 function sayBehind() {
 	clickEvents.push('back');
 	time = new Date();
 	clickTiming.push(time-trialStartTime);
-	trialEndTime = new Date();
-	$('#group_container').hide();
-	clicked(clickEvents[0]);
+	
+	if (oneQ == true) {
+		trialEndTime = new Date();
+		$('#group_container').hide();
+		clicked(clickEvents[0]);
+	}
+	else {
+	$('#responsetable').html(table_HTML);
+	$('#trialCounter').html('Progress: '+trialNumber+' of '+totalTrials);
+	$('#totalSeen').html('Which object did you see?');
+	}
 }
 
 
@@ -473,31 +484,31 @@ Tables
 <div id="tutorial" style="position:relative; z-index:-1"></div>
 <div id="tutorial_original" style="position:absolute; z-index:-1; visibility:hidden;"><b>Please read these instructions carefully!</b>
 <p>Thank you for your interest! You are contributing to ongoing vision research at the Massachusetts Institute of Technology McGovern Institute for Brain Research.</p>
-<p><font color=red><b>This task will require you to look at images on your computer screen and click to indicate a response for up to about 30 minutes. If you cannot meet these requirements for any reason, or if doing so could cause discomfort or injury to you, do not accept this HIT.</p>
+<p><font color=red><b>This task will require you to look at images on your computer screen and click to indicate a response for up to about 10 minutes. If you cannot meet these requirements for any reason, or if doing so could cause discomfort or injury to you, do not accept this HIT.</p>
 <p>We encourage you to try a little bit of this  HIT before accepting to ensure it is compatible with your system. If you think the task is working improperly, your computer may be incompatible.</p></font></b>
 <p>We recommend this task for those who are interested in contributing to scientific endeavors. Your answers will help MIT researchers better understand how the brain processes visual information.</p>
 <center><p onclick="$('#tutorial').html($('#tutorial2').html())"><font color=blue><u>Click here to continue reading</u></font></p></center></div>
 <div id="tutorial2" style="visibility:hidden; position:absolute; z-index:-1;">
 <ul>
-<li>You will see a series of images, each one presented for a very brief time. The images may contain one or more objects in eight target categories: <b>Animals, Boats, Cars, Chairs, Faces, Fruits, Planes and Tables.</b></li>
+<li>You will see a series of images, each one presented for a very brief time. Each image will contain an object in one of eight target categories: <b>Animals, Boats, Cars, Chairs, Faces, Fruits, Planes and Tables.</b></li>
 <p>
-<li>Some of the images will contain no objects, while others will contain one or several.  Any image will contain at most 3 objects, though sometimes there may be several objects of the same category in a single image. </li>
+<li>The images will also have fences, glass windows, or grass (we call these things "occluders"), and the target object will be placed either in front of or behind them.  </li>
 <p>
-<li>After you see an image, <b>you must indicate how many of each type of object you saw.</b> The response screen will show a counter for each target category, which you will use to indicate your choice.</li>
+<li>After you see an image, <b>you will need to indicate whether the target object was in front or behind, or what category the object belongs to, or both.</b> The response screen will either show a set of 8 objects you can choose from, or buttons to indicate "In front" or "Behind."</li>
 <p>
-<li>For example, if you saw two Animals and a Table, set the Animals counter to 2 and the Table counter to 1. If there are no target objects in the image, leave all the counters at 0 and just move on to the next trial.</li>
+<li>For example, if you saw an apple placed in front of a fence, you would indicate you saw an apple and/or that it was "In Front" of the fence. There is always a correct answer for every image.</li>
 <p>
-<li>Even if you're not 100% sure of the categories of some of the objects you saw, <u><b>make your best guess.</b></u> Always try to ensure that the <u>total</u> count of objects is accurate to your best guess even when you're not totally certain you got all the category identifications correct.</li>
+<li>Even if you're not 100% sure of the categories or locations of some of the objects you saw, <u><b>make your best guess.</b></u></li>
 </ul>
 <center><p onclick="$('#tutorial').html($('#tutorial3').html())"><font color=blue><u>Click here to continue reading</u></font></p></center>
 </div>
 <div id="tutorial3" style="visibility:hidden; position:absolute; z-index:-1;">
 <ul>
-<li>Sometimes the objects will be presented on a complex background that is taken from a real-life scene, while other times the objects will be presented on a blank white background. Any foreground object in the image will <u>always</u> match one of the 8 options. We are not interested in your responses to the background.</li>
+<li>Sometimes the objects will be presented on a complex background that is taken from a real-life scene, while other times the objects will be presented on a blank white background. Any object in the image will <u>always</u> match one of the 8 options. We are not interested in your responses to the background.</li>
 <p>
-<li>Please be sure you can see 8 image/word counters on your screen before beginning the experiment. As you work through the experiment, the layout arrangement of the response screen will not change.</li>
+<li>Please be sure you can see 8 category images on your screen before beginning the experiment. As you work through the experiment, the layout arrangement of the response screen will not change.</li>
 <p>
-<li><b>In total, you will see 500 images. We expect this experiment to take about 30 minutes.</b> Halfway through, we will give you a chance to take a short break and inform you of your progress. Note that the HIT will expire if you spend more than 1 hour, so plan your time accordingly.</li>
+<li><b>In total, you will see 100 images. We expect this experiment to take about 10 minutes or less.</b> Note that the HIT will expire if you spend more than 25 minutes, so plan your time accordingly.</li>
 <p>
 <li>When you are ready to begin, click the "Begin" button at the very top of the screen. <b>Be prepared to see the first image -- it happens very fast!</b></li>
 <p>
