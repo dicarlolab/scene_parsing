@@ -242,8 +242,8 @@ $('.close').hide();
 
 function gup( name )
 {
-  name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
-  var regexS = "[\\?&]"+name+"=([^&#]*)";
+  name = name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
+  var regexS = "[\?&]"+name+"=([^&#]*)";
   var regex = new RegExp( regexS );
   var param = regex.exec( window.location.href );
   if( param == null )
@@ -273,10 +273,10 @@ function init_vars() {
 	trialNumber = 0;
 	totalTrials = 100;
 	BreakTimes = [];
-	oneQ = false;
+	oneQ = true;
 	started = false;
-	startpoint = 0;
-	exp_type = 'pos+obj';
+	startpoint = 18;
+	exp_type = 'pos';
 }
 	
 function buildLib() {
@@ -464,19 +464,19 @@ Tables
 <p>
 <li>The images will also have fences, glass windows, or grass (we call these things "occluders"), and the target object will be placed either in front of or behind them.  </li>
 <p>
-<li>After you see an image, <b>you will need to indicate whether the target object was in front or behind the occluder and what category the object belongs to.</b> The response screen will show a set of 8 objects you can choose from by clicking, and buttons to indicate "In front" or "Behind."</li>
+<li>After you see an image, <b>you will need to indicate whether the target object was in front or behind the occluder.</b> The response screen will show a set of buttons to indicate "In front" or "Behind."</li>
 <p>
-<li>For example, if you saw an apple placed in front of a fence, you would indicate you saw an apple and that it was "In Front" of the fence. There is always a correct answer for every image.</li>
+<li>For example, if you saw an apple placed in front of a fence, you would simply click "Object in Front." There is always a correct answer for every image.</li>
 <p>
-<li>Even if you're not 100% sure of the categories or locations of some of the objects you saw, <u><b>make your best guess.</b></u></li>
+<li>Even if you're not 100% sure of the locations of some of the objects you saw, <u><b>make your best guess.</b></u></li>
 </ul>
 <center><p onclick="$('#tutorial').html($('#tutorial3').html())"><font color=blue><u>Click here to continue reading</u></font></p></center>
 </div>
 <div id="tutorial3" style="visibility:hidden; position:absolute; z-index:-1;">
 <ul>
-<li>Sometimes the objects will be presented on a complex background that is taken from a real-life scene, while other times the objects will be presented on a blank white background. Any object in the image will <u>always</u> match one of the 8 options. We are not interested in your responses to the background.</li>
+<li>Sometimes the objects will be presented on a complex background that is taken from a real-life scene, while other times the objects will be presented on a blank white background. We are not interested in your responses to the background.</li>
 <p>
-<li>Please be sure you can see 8 category images on your screen before beginning the experiment. As you work through the experiment, the layout arrangement of the response screen will not change.</li>
+<li>Please be sure you can see the 8 category images on your screen before beginning the experiment. As you work through the experiment, the layout arrangement of the response buttons will not change.</li>
 <p>
 <li><b>In total, you will see 100 images. We expect this experiment to take about 12 minutes or less.</b> Note that the HIT will expire if you spend more than 25 minutes, so plan your time accordingly.</li>
 <p>

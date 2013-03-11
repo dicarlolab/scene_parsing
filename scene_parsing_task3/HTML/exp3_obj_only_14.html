@@ -55,7 +55,7 @@ Array.prototype.flatten = function flatten(){
 function beginExp() {
 	console.log('beginExp');
 	$("#begintask").hide(), $("#_preload").hide();
-	started = true;	
+	started = true;
 	$('#group_container').hide();
 	$('.fixation img').attr('src',fixationImage.src);
 	$('.fixation').show(); 
@@ -78,18 +78,11 @@ function showStim() {
 
 function showResponse() {
 	console.log('showResponse');
-	
-	table_HTML = $('#responsetable').html();	
-	$('#leftsquare').html('<div style="position:relative; top:125px; height:200px; width:200px;" ><button onclick="sayBehind()">Object Behind</button></div>');
-	$('#rightsquare').html('<div style="position:relative; top:125px; height:200px; width:200px" src ="frontfence.png"><button onclick="sayFront()">Object in Front</button></div>');
-	$('#totalSeen').html('Where was the object?').css({'top':'40px'});
-	$('#trialCounter').css({'top':'42px'});	
-	$('.tbrow').hide();
-	$('#trialCounter').html('Progress: '+trialNumber+' of '+totalTrials);
-		
+	$('#totalSeen').html('Which object did you see?');
 	clickEvents = {};
 	clickTiming = {};
 	$('#group_container').show();
+	$('#trialCounter').html('Progress: '+trialNumber+' of '+totalTrials);
 	trialStartTime = new Date();
 	var thisStim = imgFiles_new[trialNumber+1];
 	$('#main_test').attr('src',thisStim);
@@ -242,8 +235,8 @@ $('.close').hide();
 
 function gup( name )
 {
-  name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
-  var regexS = "[\\?&]"+name+"=([^&#]*)";
+  name = name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
+  var regexS = "[\?&]"+name+"=([^&#]*)";
   var regex = new RegExp( regexS );
   var param = regex.exec( window.location.href );
   if( param == null )
@@ -273,10 +266,10 @@ function init_vars() {
 	trialNumber = 0;
 	totalTrials = 100;
 	BreakTimes = [];
-	oneQ = false;
+	oneQ = true;
 	started = false;
-	startpoint = 0;
-	exp_type = 'pos+obj';
+	startpoint = 14;
+	exp_type = 'obj';
 }
 	
 function buildLib() {
@@ -297,49 +290,47 @@ function preload_resources() {
 
 function nextq(obj){
 	if (started) {
-		clickEvents['obj'] = obj;
-		time = new Date();
-		clickTiming['obj'] = time-trialStartTime;
+	clickEvents['obj'] = obj;
+	time = new Date();
+	clickTiming['obj'] = time-trialStartTime;
+	table_HTML = $('#responsetable').html();
+	
+	$('#leftsquare').html('<div style="position:relative; top:125px; height:200px; width:200px;" ><button onclick="sayBehind()">Object Behind</button></div>');
+	$('#rightsquare').html('<div style="position:relative; top:125px; height:200px; width:200px" src ="frontfence.png"><button onclick="sayFront()">Object in Front</button></div>');
+	$('#totalSeen').html('Where was the object?').css({'top':'40px'});
+	$('#trialCounter').css({'top':'42px'});
+	
+	$('.tbrow').hide();
+	
+	if (oneQ == true) {
 		trialEndTime = new Date();
 		$('#group_container').hide();
 		clicked(clickEvents['obj']);
 	}
 	else {
-	}	
+	}
+	}
+	else {
+	}
+	
 }
 
 function sayFront() {
 	clickEvents['pos'] = 'front';
 	time = new Date();
 	clickTiming['pos'] = time-trialStartTime;
-	
-	if (oneQ == true) {
-		trialEndTime = new Date();
-		$('#group_container').hide();
-		clicked(clickEvents['pos']);
-	}
-	else {
-	$('#responsetable').html(table_HTML);
-	$('#trialCounter').html('Progress: '+trialNumber+' of '+totalTrials);
-	$('#totalSeen').html('Which object did you see?');
-	}
+	trialEndTime = new Date();
+	$('#group_container').hide();
+	clicked(clickEvents['obj']);
 }
 
 function sayBehind() {
 	clickEvents['pos'] = 'back';
 	time = new Date();
 	clickTiming['pos'] = time-trialStartTime;
-	
-	if (oneQ == true) {
-		trialEndTime = new Date();
-		$('#group_container').hide();
-		clicked(clickEvents['pos']);
-	}
-	else {
-	$('#responsetable').html(table_HTML);
-	$('#trialCounter').html('Progress: '+trialNumber+' of '+totalTrials);
-	$('#totalSeen').html('Which object did you see?');
-	}
+	trialEndTime = new Date();
+	$('#group_container').hide();
+	clicked(clickEvents['obj']);
 }
 
 
@@ -462,19 +453,17 @@ Tables
 <ul>
 <li>You will see a series of images, each one presented for a very brief time. Each image will contain an object in one of eight target categories: <b>Animals, Boats, Cars, Chairs, Faces, Fruits, Planes and Tables.</b></li>
 <p>
-<li>The images will also have fences, glass windows, or grass (we call these things "occluders"), and the target object will be placed either in front of or behind them.  </li>
+<li>After you see an image, <b>you will need to indicate what category the object belongs to.</b> The response screen will show a set of 8 object categories you can choose from by clicking.
 <p>
-<li>After you see an image, <b>you will need to indicate whether the target object was in front or behind the occluder and what category the object belongs to.</b> The response screen will show a set of 8 objects you can choose from by clicking, and buttons to indicate "In front" or "Behind."</li>
+<li>For example, if you saw an apple, you would click the image which indicates the best category match: a fruit. There is always a correct answer for every image.</li>
 <p>
-<li>For example, if you saw an apple placed in front of a fence, you would indicate you saw an apple and that it was "In Front" of the fence. There is always a correct answer for every image.</li>
-<p>
-<li>Even if you're not 100% sure of the categories or locations of some of the objects you saw, <u><b>make your best guess.</b></u></li>
+<li>Even if you're not 100% sure of the categories of some of the objects you saw, <u><b>make your best guess.</b></u></li>
 </ul>
 <center><p onclick="$('#tutorial').html($('#tutorial3').html())"><font color=blue><u>Click here to continue reading</u></font></p></center>
 </div>
 <div id="tutorial3" style="visibility:hidden; position:absolute; z-index:-1;">
 <ul>
-<li>Sometimes the objects will be presented on a complex background that is taken from a real-life scene, while other times the objects will be presented on a blank white background. Any object in the image will <u>always</u> match one of the 8 options. We are not interested in your responses to the background.</li>
+<li>Sometimes the objects will be presented on a complex background that is taken from a real-life scene, while other times the objects will be presented on a blank white background. The object may also be placed in front of or behind something like glass panes, grass, or fences. We are not interested in your responses to the background or these other elements.
 <p>
 <li>Please be sure you can see 8 category images on your screen before beginning the experiment. As you work through the experiment, the layout arrangement of the response screen will not change.</li>
 <p>

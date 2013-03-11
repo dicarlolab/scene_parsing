@@ -242,8 +242,8 @@ $('.close').hide();
 
 function gup( name )
 {
-  name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
-  var regexS = "[\\?&]"+name+"=([^&#]*)";
+  name = name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
+  var regexS = "[\?&]"+name+"=([^&#]*)";
   var regex = new RegExp( regexS );
   var param = regex.exec( window.location.href );
   if( param == null )
@@ -275,7 +275,7 @@ function init_vars() {
 	BreakTimes = [];
 	oneQ = false;
 	started = false;
-	startpoint = 0;
+	startpoint = 11;
 	exp_type = 'pos+obj';
 }
 	

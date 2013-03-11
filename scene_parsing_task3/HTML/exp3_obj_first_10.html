@@ -55,7 +55,7 @@ Array.prototype.flatten = function flatten(){
 function beginExp() {
 	console.log('beginExp');
 	$("#begintask").hide(), $("#_preload").hide();
-	started = true;	
+	started = true;
 	$('#group_container').hide();
 	$('.fixation img').attr('src',fixationImage.src);
 	$('.fixation').show(); 
@@ -78,18 +78,11 @@ function showStim() {
 
 function showResponse() {
 	console.log('showResponse');
-	
-	table_HTML = $('#responsetable').html();	
-	$('#leftsquare').html('<div style="position:relative; top:125px; height:200px; width:200px;" ><button onclick="sayBehind()">Object Behind</button></div>');
-	$('#rightsquare').html('<div style="position:relative; top:125px; height:200px; width:200px" src ="frontfence.png"><button onclick="sayFront()">Object in Front</button></div>');
-	$('#totalSeen').html('Where was the object?').css({'top':'40px'});
-	$('#trialCounter').css({'top':'42px'});	
-	$('.tbrow').hide();
-	$('#trialCounter').html('Progress: '+trialNumber+' of '+totalTrials);
-		
+	$('#totalSeen').html('Which object did you see?');
 	clickEvents = {};
 	clickTiming = {};
 	$('#group_container').show();
+	$('#trialCounter').html('Progress: '+trialNumber+' of '+totalTrials);
 	trialStartTime = new Date();
 	var thisStim = imgFiles_new[trialNumber+1];
 	$('#main_test').attr('src',thisStim);
@@ -242,8 +235,8 @@ $('.close').hide();
 
 function gup( name )
 {
-  name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
-  var regexS = "[\\?&]"+name+"=([^&#]*)";
+  name = name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
+  var regexS = "[\?&]"+name+"=([^&#]*)";
   var regex = new RegExp( regexS );
   var param = regex.exec( window.location.href );
   if( param == null )
@@ -275,8 +268,8 @@ function init_vars() {
 	BreakTimes = [];
 	oneQ = false;
 	started = false;
-	startpoint = 0;
-	exp_type = 'pos+obj';
+	startpoint = 10;
+	exp_type = 'obj+pos';
 }
 	
 function buildLib() {
@@ -297,49 +290,47 @@ function preload_resources() {
 
 function nextq(obj){
 	if (started) {
-		clickEvents['obj'] = obj;
-		time = new Date();
-		clickTiming['obj'] = time-trialStartTime;
+	clickEvents['obj'] = obj;
+	time = new Date();
+	clickTiming['obj'] = time-trialStartTime;
+	table_HTML = $('#responsetable').html();
+	
+	$('#leftsquare').html('<div style="position:relative; top:125px; height:200px; width:200px;" ><button onclick="sayBehind()">Object Behind</button></div>');
+	$('#rightsquare').html('<div style="position:relative; top:125px; height:200px; width:200px" src ="frontfence.png"><button onclick="sayFront()">Object in Front</button></div>');
+	$('#totalSeen').html('Where was the object?').css({'top':'40px'});
+	$('#trialCounter').css({'top':'42px'});
+	
+	$('.tbrow').hide();
+	
+	if (oneQ == true) {
 		trialEndTime = new Date();
 		$('#group_container').hide();
 		clicked(clickEvents['obj']);
 	}
 	else {
-	}	
+	}
+	}
+	else {
+	}
+	
 }
 
 function sayFront() {
 	clickEvents['pos'] = 'front';
 	time = new Date();
 	clickTiming['pos'] = time-trialStartTime;
-	
-	if (oneQ == true) {
-		trialEndTime = new Date();
-		$('#group_container').hide();
-		clicked(clickEvents['pos']);
-	}
-	else {
-	$('#responsetable').html(table_HTML);
-	$('#trialCounter').html('Progress: '+trialNumber+' of '+totalTrials);
-	$('#totalSeen').html('Which object did you see?');
-	}
+	trialEndTime = new Date();
+	$('#group_container').hide();
+	clicked(clickEvents['obj']);
 }
 
 function sayBehind() {
 	clickEvents['pos'] = 'back';
 	time = new Date();
 	clickTiming['pos'] = time-trialStartTime;
-	
-	if (oneQ == true) {
-		trialEndTime = new Date();
-		$('#group_container').hide();
-		clicked(clickEvents['pos']);
-	}
-	else {
-	$('#responsetable').html(table_HTML);
-	$('#trialCounter').html('Progress: '+trialNumber+' of '+totalTrials);
-	$('#totalSeen').html('Which object did you see?');
-	}
+	trialEndTime = new Date();
+	$('#group_container').hide();
+	clicked(clickEvents['obj']);
 }
 
 
