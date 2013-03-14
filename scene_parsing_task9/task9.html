@@ -1,0 +1,329 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Category Counting</title>
+
+<style>
+body { margin:0; padding: 0; font-family: 'trebuchet ms', trebuchet, verdana }
+div,pre { margin:0; padding:0 }
+h2 { margin: 20px 0 5px 0; padding: 0 }
+p.intro { margin: 0; padding: 15px; background: #eee; font-size: small; }
+.thumbs { position: absolute; width: 100px; height: 100px;}
+div.thumb { position:absolute; float:left; padding: 1px; width: 64px; height: 64px;}
+div.thumb img { border: 2px solid white; width:64px; height:64px; }
+
+div#tutorial {
+position:relative; 
+background-color: white;  
+padding: 10px;
+}
+
+</style>
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+<script type="text/javascript" language="JavaScript" src="http://web.mit.edu/esolomon/www/browserdetect.js"></script>
+<script type="text/javascript" src="http://web.mit.edu/esolomon/www/javascripts/jQueryRotate.2.2.js"></script>
+<script type="text/javascript" src="http://web.mit.edu/esolomon/www/javascripts/jQuery.mousewheel.js"></script>
+<script type="text/javascript" src="http://web.mit.edu/esolomon/www/javascripts/jquery.zoom-min.js"></script>
+<script type="text/javascript" src="http://web.mit.edu/esolomon/www/scene_parsing/scene_parsing_task3/imgFiles.js"></script>
+<script type="text/javascript" src="http://web.mit.edu/esolomon/www/zen.js"></script>
+<script type="text/javascript" src="http://esolomon.scripts.mit.edu/ip.php"></script>
+<script src="http://web.mit.edu/esolomon/www/javascripts/detect-zoom.js" type="text/javascript"></script>
+<link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+
+<script type="text/javascript">
+
+shuffle = function(o) { 
+	for(var j, x, i = o.length; i; j = parseInt(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
+	return o;
+  };
+  
+Array.prototype.flatten = function flatten(){
+   var flat = [];
+   for (var i = 0, l = this.length; i < l; i++){
+       var type = Object.prototype.toString.call(this[i]).split(' ').pop().split(']').shift().toLowerCase();
+       if (type) { flat = flat.concat(/^(array|collection|arguments|object)$/.test(type) ? flatten.call(this[i]) : this[i]); }
+   }
+   return flat;
+};
+
+
+//!!==BEGIN DYNAMIC TRIAL CODE==!!//
+
+function beginExp() {
+	console.log('beginExp');
+	$('#begintask').hide(), $('#_preload').hide();
+	$('#nextTrial').show();
+	$('#group_container').hide();
+	$('.fixation img').attr('src',fixationImage.src);
+	$('.fixation').show(); 
+	var thisStim = imgFiles_new[trialNumber];
+	$('#main_test').attr('src',thisStim);
+	setTimeout(function() {
+						showStim();
+						},ISI);
+}
+
+function showStim() {
+	console.log('showStim');
+	$('.test').show();	
+	$('.fixation').hide();
+	setTimeout(function() {
+						$('.test').hide();
+						setTimeout("showResponse()",ISI);
+						},stimduration);	
+}
+
+function showResponse() {
+	console.log('showResponse');
+	$('#trialCounter').html('Progress: '+trialNumber+' of '+totalTrials);
+	$('#group_container').show();
+	trialStartTime = new Date();
+	var thisStim = imgFiles_new[trialNumber+1];
+	$('#main_test').attr('src',thisStim);	
+}
+
+function clicked() {
+	trialEndTime = new Date();
+	console.log('clicked');
+	$('#group_container').hide();
+ 	$('#trialCounter').html('Progress: '+trialNumber+' of '+totalTrials);
+ 	pushData();
+ 	$('.fixation img').attr('src',fixationImage.src);
+ 	$('.fixation').show(); 
+ 	endTrial();
+}
+
+
+function pushData() {
+	console.log('pushData');
+	StimDone.push(imgFiles_new[trialNumber]);
+	obj = { 'XY':$('#XYpos').val(), 'Z':$('#Zpos').val() }
+	response.push(obj);
+	trialDurations.push(trialEndTime - trialStartTime);
+}
+
+function endTrial() {
+  if (trialNumber >= (totalTrials-1))
+  {
+	var resultsobj = [];
+	resultsobj.push({
+					Response:clickEvents_rec,
+					ImgOrder:imgFiles_new,
+					StimShown:StimDone,
+					clickTiming:clickTiming_rec,
+					StimDuration:stimduration,
+					RT:trialDurations,
+					Condition:exp_type,
+					Zoom:zoom,
+					IPaddress:user_IP,
+					Browser:BrowserDetect.browser,
+					Version:BrowserDetect.version,
+					OpSys:BrowserDetect.OS,
+					WindowHeight:winH,
+					WindowWidth:winW,
+					ScreenHeight:vertical,
+					ScreenWidth:horizontal
+					});	  
+	  
+	document.getElementById("assignmentId").value = aID;
+	document.getElementById("data").value = JSON.stringify(resultsobj);
+	document.getElementById("postdata").submit();	
+  }
+    else if (jQuery.inArray(trialNumber,BreakTimes) > -1) {
+	  takeABreak();
+  }
+  else
+  {
+    trialNumber++;
+    setTimeout(function() {showStim()},ISI);
+  }
+}
+
+function takeABreak() {
+	$('#main_test').attr('src',breakscreen.src);
+	$('.fixation').hide();
+	$('.test').show()
+	$('#_preload').html("<font color=red style=background-color:white>You have completed "+Math.round((trialNumber/totalTrials)*100)+"% of the experiment. Be sure to pay attention so that you know you can finish on time!");
+	$('#_preload').show();
+	document.onkeypress = function(e){  
+			var evtobj = window.event? event : e;
+			var unicode = evtobj.charCode? evtobj.charCode : evtobj.keyCode;
+			var actualKey = String.fromCharCode(unicode);
+				if (actualKey=='z'){
+					trialNumber++;
+					$('.test').hide()
+					$('#_preload').hide();
+					$('.fixation').show();	
+					var thisStim = imgFiles_new[trialNumber];
+					$('#main_test').attr('src',thisStim)	
+					setTimeout(function() {showStim()},ISI)};		
+		};
+	
+}
+
+//!!==END DYNAMIC TRIAL CODE==!!//
+
+function gup( name )
+{
+  name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+  var regexS = "[\\?&]"+name+"=([^&#]*)";
+  var regex = new RegExp( regexS );
+  var param = regex.exec( window.location.href );
+  if( param == null )
+    return "";
+  else
+    return param[1];
+}
+
+function init_vars() {
+	zoom = DetectZoom.zoom();
+	aID = gup("assignmentId");  
+	clickEvents = new Array();
+	clickEvents_rec = new Array();
+	clickTiming = new Array();
+	clickTiming_rec = new Array();
+	response = new Array();
+	trialDurations = new Array();
+	trialStartTime = new Date();
+	StimDone = new Array();
+	imgFiles_new = new Array();
+	fixationImage = new Image;
+	fixationImage.src = "http://s3.amazonaws.com/human_training/fixation.png";
+	breakscreen = new Image;
+	breakscreen.src = "http://s3.amazonaws.com/monkeyimgs/2way_impute/break.png";
+	stimduration = 100;
+	ISI = 500;
+	trialNumber = 0;
+	totalTrials = 100;
+	BreakTimes = [];
+	startpoint = 0;
+	exp_type = 'XY+Z';
+}
+	
+function buildLib() {
+	//imgFiles = groupings_base.flatten();
+	//shuffle(imgFiles)
+	//imgFiles = shuffle(imgFiles);
+}
+
+function preload_resources() {
+	imgFiles_new = imgFiles.slice(startpoint*totalTrials,(startpoint+1)*totalTrials)
+	shuffle(imgFiles_new);
+		
+	//imgFiles_new = imgFiles_new.map(function(a) {
+	//	return "http://s3.amazonaws.com/dan_texture_task/dataset1/"+a;
+	//});				
+	
+}
+
+$(document).ready(function() {
+	
+	init_vars();
+	buildLib();
+	preload_resources();
+	preload(imgFiles_new, function() {
+							   $("#begintask").click(function(){
+															  beginExp();
+															  });
+							   });		
+							   
+	$('.test').hide();
+	$('#warning').hide();
+	$('#nextTrial').hide();
+		
+	//animateImgs();
+	$("#tutorial").html($("#tutorial_original").html());
+	$("#tutorial").dialog({height:700,
+							width:600,
+							position:"center",
+							title:"Instructions"
+							});
+							
+	if (aID == "ASSIGNMENT_ID_NOT_AVAILABLE"){
+	$('#warning').show();
+	$('#warning').html("<font color=red style=background-color:white><b>You are in PREVIEW mode. Please ACCEPT this HIT to complete the task and receive payment.</b></font>")
+	}
+	
+});
+
+</script>
+
+</head>
+
+<body bgcolor="#7F7F7F">
+<div style="height:1000px; width:auto;">
+<div align="center" id="warning"></div>
+<div align="center"><button id="begintask" value="Begin!">Begin!</button></div>
+<div id="_preload" align="center" style="position:fixed; top:0px; left:10px;"></div>
+<div class="fixation" align="center" style="position:relative; z-index:201; top:175px; left:-15px;"><img id="fixation_dot" src="" /></div>
+<div class="test" align="center" style="position:relative; z-index:200; top:75px; left:-15px;"><img id="main_test" src="" /></div>
+<div id="group_container" align="center" style="position:relative; top:265px;">
+
+
+The boat was
+<select id="Zpos">
+	<option value="above">above</option>
+	<option value="behind">behind</option>
+</select>
+and to the 
+<select id="XYpos">
+	<option value="upper-left">upper-left</option>
+	<option value="upper-right">upper-right</option>
+	<option value="lower-left">lower-left</option>
+	<option value="lower-right">lower-right</option>
+</select>
+of the sphere.
+<p>
+<button id="nextTrial" onclick="clicked()">Next Trial</button>
+<p>
+<div id="trialCounter" style="font-size:small;"></div>
+</div>
+
+<div id="tutorial_link" style="position:fixed; top:0px; right:10px;" onclick="$('#tutorial').html($('#tutorial_original').html()); $('#tutorial').dialog({height:700,							width:600,position:'center',title:'Instructions'})"><u>View Instructions</u></div>
+
+<div id="tutorial" style="position:relative; z-index:-1"></div>
+<div id="tutorial_original" style="position:absolute; z-index:-1; visibility:hidden;"><b>Please read these instructions carefully!</b>
+<p>Thank you for your interest! You are contributing to ongoing vision research at the Massachusetts Institute of Technology McGovern Institute for Brain Research.</p>
+<p><font color=red><b>This task will require you to look at images on your computer screen and click to indicate a response for up to about 12 minutes. If you cannot meet these requirements for any reason, or if doing so could cause discomfort or injury to you, do not accept this HIT.</p>
+<p>We encourage you to try a little bit of this  HIT before accepting to ensure it is compatible with your system. If you think the task is working improperly, your computer may be incompatible.</p></font></b>
+<p>We recommend this task for those who are interested in contributing to scientific endeavors. Your answers will help MIT researchers better understand how the brain processes visual information.</p>
+<center><p onclick="$('#tutorial').html($('#tutorial2').html())"><font color=blue><u>Click here to continue reading</u></font></p></center></div>
+<div id="tutorial2" style="visibility:hidden; position:absolute; z-index:-1;">
+<ul>
+<li>You will see a series of images, each one presented for a very brief time. Each image will contain an object in one of eight target categories: <b>Animals, Boats, Cars, Chairs, Faces, Fruits, Planes and Tables.</b></li>
+<p>
+<li>The images will also have fences, glass windows, or grass (we call these things "occluders"), and the target object will be placed either in front of or behind them.  </li>
+<p>
+<li>After you see an image, <b>you will need to indicate whether the target object was in front or behind the occluder.</b> The response screen will show a set of buttons to indicate "In front" or "Behind."</li>
+<p>
+<li>For example, if you saw an apple placed in front of a fence, you would simply click "Object in Front." There is always a correct answer for every image.</li>
+<p>
+<li>Even if you're not 100% sure of the locations of some of the objects you saw, <u><b>make your best guess.</b></u></li>
+</ul>
+<center><p onclick="$('#tutorial').html($('#tutorial3').html())"><font color=blue><u>Click here to continue reading</u></font></p></center>
+</div>
+<div id="tutorial3" style="visibility:hidden; position:absolute; z-index:-1;">
+<ul>
+<li>Sometimes the objects will be presented on a complex background that is taken from a real-life scene, while other times the objects will be presented on a blank white background. We are not interested in your responses to the background.</li>
+<p>
+<li>Please be sure you can see the 8 category images on your screen before beginning the experiment. As you work through the experiment, the layout arrangement of the response buttons will not change.</li>
+<p>
+<li><b>In total, you will see 100 images. We expect this experiment to take about 12 minutes or less.</b> Note that the HIT will expire if you spend more than 25 minutes, so plan your time accordingly.</li>
+<p>
+<li>When you are ready to begin, click the "Begin" button at the very top of the screen. <b>Be prepared to see the first image -- it happens very fast!</b></li>
+<p>
+<li>If you have questions or concerns about this HIT, feel free to contact the requester. You can re-read these instructions at any time by clicking the link in the upper right-hand corner of the screen. Good luck!</li>
+</ul>
+<center><font color=blue><u><p onclick="$('#tutorial').dialog('close')">Click here to close the instructions</p></center></font></u>
+</div>
+</div>
+	<form style="visibility:hidden" id="postdata" action="https://www.mturk.com/mturk/externalSubmit" method="post">
+	<input type="text" name="data" id="data" value="">
+    <input type="text" name="assignmentId" id="assignmentId" value="">
+	</form>
+
+</body>
+</html>
