@@ -169,8 +169,8 @@ function takeABreak() {
 
 function gup( name )
 {
-  name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
-  var regexS = "[\\?&]"+name+"=([^&#]*)";
+  name = name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
+  var regexS = "[\?&]"+name+"=([^&#]*)";
   var regex = new RegExp( regexS );
   var param = regex.exec( window.location.href );
   if( param == null )
@@ -196,7 +196,7 @@ function init_vars() {
 	trialNumber = 0;
 	totalTrials = 100;
 	BreakTimes = [];
-	startpoint = 30;
+	startpoint = 11;
 	exp_type = 'XY+Z';
 }
 	

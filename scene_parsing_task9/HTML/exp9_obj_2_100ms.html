@@ -24,6 +24,8 @@ padding: 10px;
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
 <script type="text/javascript" language="JavaScript" src="http://web.mit.edu/esolomon/www/browserdetect.js"></script>
+<script type="text/javascript" src="http://web.mit.edu/esolomon/www/javascripts/jQueryRotate.2.2.js"></script>
+<script type="text/javascript" src="http://web.mit.edu/esolomon/www/javascripts/jQuery.mousewheel.js"></script>
 <script type="text/javascript" src="http://web.mit.edu/esolomon/www/javascripts/jquery.zoom-min.js"></script>
 <script type="text/javascript" src="http://web.mit.edu/esolomon/www/scene_parsing/scene_parsing_task9/taskdata.js"></script>
 <script type="text/javascript" src="http://web.mit.edu/esolomon/www/zen.js"></script>
@@ -52,8 +54,8 @@ Array.prototype.flatten = function flatten(){
 
 function beginExp() {
 	console.log('beginExp');
-	$('#begintask').hide(), $('#_preload').hide();
-	$('#nextTrial').show();
+	$("#begintask").hide(), $("#_preload").hide();
+	started = true;
 	$('#group_container').hide();
 	$('.fixation img').attr('src',fixationImage.src);
 	$('.fixation').show(); 
@@ -76,35 +78,37 @@ function showStim() {
 
 function showResponse() {
 	console.log('showResponse');
-
-	$('#group_container').html('The '+categories[trialNumber]+' was <select id="Zpos"><option value=""></option><option value="in front">in front</option><option value="behind">behind</option></select> and to the <select id="XYpos"><option value=""></option><option value="upper-left">upper-left</option><option value="upper-right">upper-right</option><option value="lower-left">lower-left</option><option value="lower-right">lower-right</option></select> of the '+occluders[trialNumber]+'.<p><button id="nextTrial" onclick="clicked()">Next Trial</button><p><div id="trialCounter" style="font-size:small;"></div></div><p><div style="font-size:small;">Progress: '+trialNumber+' of '+totalTrials+'</div>');
-
+	$('#totalSeen').html('Which object did you see?');
+	clickEvents = {};
+	clickTiming = {};
 	$('#group_container').show();
+	$('#trialCounter').html('Progress: '+trialNumber+' of '+totalTrials);
 	trialStartTime = new Date();
 	var thisStim = imgFiles_new[trialNumber+1];
-	$('#main_test').attr('src',thisStim);	
+	$('#main_test').attr('src',thisStim);
+	
 }
 
-function clicked() {
-	if ($('#XYpos').val() == "" || $('#Zpos').val() == "") {}
-	else {
-	trialEndTime = new Date();
+function clicked(myval) {
 	console.log('clicked');
-	$('#group_container').hide();
- 	pushData();
- 	$('.fixation img').attr('src',fixationImage.src);
- 	$('.fixation').show(); 
- 	endTrial();
- 	}
+ $('#responsetable').html(table_HTML);
+ $('#trialCounter').html('Progress: '+trialNumber+' of '+totalTrials);
+ $('.tbrow').show();
+ pushData(myval)
+ $('.fixation img').attr('src',fixationImage.src);
+ $('.fixation').show(); 
+ endTrial();
+	
 }
 
 
-function pushData() {
+function pushData(myval) {
 	console.log('pushData');
-	StimDone.push(imgFiles_new[trialNumber]);
-	obj = { 'XY':$('#XYpos').val(), 'Z':$('#Zpos').val() }
-	response.push(obj);
-	trialDurations.push(trialEndTime - trialStartTime);
+StimDone.push(imgFiles_new[trialNumber]);
+response.push(myval);
+trialDurations.push(trialEndTime - trialStartTime);
+clickEvents_rec.push(clickEvents);
+clickTiming_rec.push(clickTiming);
 }
 
 function endTrial() {
@@ -112,7 +116,7 @@ function endTrial() {
   {
 	var resultsobj = [];
 	resultsobj.push({
-					Response:response,
+					Response:clickEvents_rec,
 					ImgOrder:imgFiles_new,
 					StimShown:StimDone,
 					StimDuration:stimduration,
@@ -169,8 +173,8 @@ function takeABreak() {
 
 function gup( name )
 {
-  name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
-  var regexS = "[\\?&]"+name+"=([^&#]*)";
+  name = name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
+  var regexS = "[\?&]"+name+"=([^&#]*)";
   var regex = new RegExp( regexS );
   var param = regex.exec( window.location.href );
   if( param == null )
@@ -182,6 +186,10 @@ function gup( name )
 function init_vars() {
 	zoom = DetectZoom.zoom();
 	aID = gup("assignmentId");  
+	clickEvents = new Array();
+	clickEvents_rec = new Array();
+	clickTiming = new Array();
+	clickTiming_rec = new Array();
 	response = new Array();
 	trialDurations = new Array();
 	trialStartTime = new Date();
@@ -196,8 +204,10 @@ function init_vars() {
 	trialNumber = 0;
 	totalTrials = 100;
 	BreakTimes = [];
-	startpoint = 30;
-	exp_type = 'XY+Z';
+	oneQ = true;
+	started = false;
+	startpoint = 2;
+	exp_type = 'obj';
 }
 	
 function buildLib() {
@@ -207,12 +217,8 @@ function buildLib() {
 }
 
 function preload_resources() {
-	imgFiles_new = imgFiles.slice(startpoint*totalTrials,(startpoint+1)*totalTrials);
-
-	categories = categories.slice(startpoint*totalTrials,(startpoint+1)*totalTrials);
-
-	occluders = occluders.slice(startpoint*totalTrials,(startpoint+1)*totalTrials);
-	//shuffle(imgFiles_new);
+	imgFiles_new = imgFiles.slice(startpoint*totalTrials,(startpoint+1)*totalTrials)
+	shuffle(imgFiles_new);
 		
 	//imgFiles_new = imgFiles_new.map(function(a) {
 	//	return "http://s3.amazonaws.com/dan_texture_task/dataset1/"+a;
@@ -220,20 +226,71 @@ function preload_resources() {
 	
 }
 
+function nextq(obj){
+	if (started) {
+	clickEvents['obj'] = obj;
+	time = new Date();
+	clickTiming['obj'] = time-trialStartTime;
+	table_HTML = $('#responsetable').html();
+	
+	$('#leftsquare').html('<div style="position:relative; top:125px; height:200px; width:200px;" ><button onclick="sayBehind()">Object Behind</button></div>');
+	$('#rightsquare').html('<div style="position:relative; top:125px; height:200px; width:200px" src ="frontfence.png"><button onclick="sayFront()">Object in Front</button></div>');
+	$('#totalSeen').html('Where was the object?').css({'top':'40px'});
+	$('#trialCounter').css({'top':'42px'});
+	
+	$('.tbrow').hide();
+	
+	if (oneQ == true) {
+		trialEndTime = new Date();
+		$('#group_container').hide();
+		clicked(clickEvents['obj']);
+	}
+	else {
+	}
+	}
+	else {
+	}
+	
+}
+
+function sayFront() {
+	clickEvents['pos'] = 'front';
+	time = new Date();
+	clickTiming['pos'] = time-trialStartTime;
+	trialEndTime = new Date();
+	$('#group_container').hide();
+	clicked(clickEvents['obj']);
+}
+
+function sayBehind() {
+	clickEvents['pos'] = 'back';
+	time = new Date();
+	clickTiming['pos'] = time-trialStartTime;
+	trialEndTime = new Date();
+	$('#group_container').hide();
+	clicked(clickEvents['obj']);
+}
+
+
 $(document).ready(function() {
 	
 	init_vars();
 	buildLib();
 	preload_resources();
+	
 	preload(imgFiles_new, function() {
 							   $("#begintask").click(function(){
 															  beginExp();
 															  });
 							   });		
-							   
+	//init_groups();
+	//createGroup();
+	//assignButtons();
+	$('.plus').bind('click', function(event) { event.stopPropagation() });
+	$('.minus').bind('click', function(event) { event.stopPropagation() });
+	
 	$('.test').hide();
 	$('#warning').hide();
-	$('#nextTrial').hide();
 		
 	//animateImgs();
 	$("#tutorial").html($("#tutorial_original").html());
@@ -261,26 +318,64 @@ $(document).ready(function() {
 <div id="_preload" align="center" style="position:fixed; top:0px; left:10px;"></div>
 <div class="fixation" align="center" style="position:relative; z-index:201; top:175px; left:-15px;"><img id="fixation_dot" src="" /></div>
 <div class="test" align="center" style="position:relative; z-index:200; top:75px; left:-15px;"><img id="main_test" src="" /></div>
-<div id="group_container" align="center" style="position:relative; top:265px;">
-<p><i>The following is an example of the type of question you will see. Click "Begin" to start the experiment.</i></p>
-The boat was
-<select id="Zpos">
-	<option value=""></option>
-	<option value="in front">in front</option>
-	<option value="behind">behind</option>
-</select>
-and to the 
-<select id="XYpos">
-	<option value=""></option>
-	<option value="upper-left">upper-left</option>
-	<option value="upper-right">upper-right</option>
-	<option value="lower-left">lower-left</option>
-	<option value="lower-right">lower-right</option>
-</select>
-of the sphere.
-<p>
-<button id="nextTrial" onclick="clicked()">Next Trial</button>
-<p>
+<div id="group_container" align="center">
+<table width="800" cellpadding="0" cellspacing="0" height="500" border="0" align="center" style="visibility:visible" id="responsetable">
+  <tr height=200 class="tbrow">
+    <td align="center"><img height=200 width=200 src ="http://s3.amazonaws.com/384selections/Variation00_nobg/animals/bear_rx%2B00.000_ry%2B90.000_rz%2B00.000_tx%2B00.000_ty%2B00.000_s%2B00.800_fd9cf629ba3f5c7f127404739f555bf381fe7a32_150x150.png" onclick="nextq('animal')" />
+    <br/>
+    <div style="position:relative; top:-50px;">
+Animals
+    </div>
+    </td>
+    <td align="center" ><img height=200 width=200 src ="http://s3.amazonaws.com/384selections/Variation00_nobg/boats/BAHRAIN_rx%2B00.000_ry%2B00.000_rz%2B00.000_tx%2B00.000_ty%2B00.000_s%2B01.200_bcbfb7f6f104bdba7d62908b5eb5e1ba232da6d3_150x150.png" onclick="nextq('boats')"/>
+    <br/>
+    <div style="position:relative; top:-50px;">
+Boats
+    </div></td>
+    <td align="center"><img height=200 width=200 src ="http://s3.amazonaws.com/384selections/Variation00_nobg/cars/alfa155_rx%2B00.000_ry%2B00.000_rz%2B00.000_tx%2B00.000_ty%2B00.000_s%2B01.000_5a93409f4f5c7c3b3261090530ee4c7cdfebf57a_150x150.png" onclick="nextq('cars')"/>
+    <br/>
+    <div style="position:relative; top:-50px;">
+Cars
+    </div></td>
+  </tr>
+  <tr>
+    <td align="center" id="leftsquare"><img style="position:relative; top:-50px;" height=200 width=200 src ="http://s3.amazonaws.com/384selections/Variation00_nobg/chairs/_001_rx%2B00.000_ry%2B00.000_rz%2B00.000_tx%2B00.000_ty%2B00.000_s%2B00.700_10b0bff2f9b7f0a853edac7ed9b5e2d737da033a_150x150.png" onclick="nextq('chairs')"/>
+    <br/>
+    <div style="position:relative; top:-100px;">
+Chairs
+    </div>
+    </td>
+    <td width="200" height="150" align="left" style="vertical-align:center;">
+    <div align="center" style="font-size:larger; margin-bottom:0px; position:relative; top:-50px;" id="totalSeen"></div>
+    <div align="center" id="trialCounter" style="position:relative; top:-50px;"></div>
+    </center>
+	</td>
+    <td align="center" id="rightsquare"><img style="position:relative; top:-50px;" height=200 width=200 src ="http://s3.amazonaws.com/384selections/Variation00_nobg/faces/face0001_rx%2B00.000_ry%2B00.000_rz%2B00.000_tx%2B00.000_ty%2B00.000_s%2B01.000_0c0d7402273188a7ed2d91dbef4baf75554c2017_150x150.png" onclick="nextq('faces')"/>
+    <br/>
+    <div style="position:relative; top:-100px;">
+Faces
+    </div>
+    </td>
+  </tr>
+  <tr height=200 class="tbrow">
+    <td align="center"><img style="position:relative; top:-100px;" height=200 width=200 src ="http://s3.amazonaws.com/384selections/Variation00_nobg/fruits/Apple_Fruit_obj_rx-90.000_ry%2B00.000_rz%2B00.000_tx%2B00.000_ty%2B00.000_s%2B00.700_99d1e850e215676eff1d7db3ba4e156370a81663_150x150.png" onclick="nextq('fruits')"/>
+    <br/>
+    <div style="position:relative; top:-150px;">
+Fruits
+    </div>
+    </td>
+    <td align="center"><img style="position:relative; top:-100px;" height=200 width=200 src ="http://s3.amazonaws.com/384selections/Variation00_nobg/planes/_01_Airliner_2jetEngines_rx%2B00.000_ry%2B90.000_rz%2B90.000_tx%2B00.000_ty%2B00.000_s%2B01.300_2f044ae294a23fee6bbe2b7bc0be610726abe88b_150x150.png" onclick="nextq('planes')"/>
+    <br/>
+    <div style="position:relative; top:-150px;">
+Planes
+    </div></td>
+    <td align="center"><img style="position:relative; top:-100px;" height=200 width=200 src ="http://s3.amazonaws.com/384selections/Variation00_nobg/tables/_08_rx%2B00.000_ry%2B00.000_rz%2B00.000_tx%2B00.000_ty%2B00.000_s%2B00.700_b69a1345364079ad15436e629e52e02e050dbf2b_150x150.png" onclick="nextq('tables')"/>
+    <br/>
+    <div style="position:relative; top:-150px;">
+Tables
+    </div></td>
+  </tr>
+</table>
 </div>
 
 <div id="tutorial_link" style="position:fixed; top:0px; right:10px;" onclick="$('#tutorial').html($('#tutorial_original').html()); $('#tutorial').dialog({height:700,							width:600,position:'center',title:'Instructions'})"><u>View Instructions</u></div>
@@ -296,23 +391,21 @@ of the sphere.
 <ul>
 <li>You will see a series of images, each one presented for a very brief time. Each image will contain an object in one of eight target categories: <b>Animals, Boats, Cars, Chairs, Faces, Fruits, Planes and Tables.</b></li>
 <p>
-<li>The images will also have white discs, squares, spheres, or rings (we call these things "occluders"), and the target object will be placed either in front of or behind them.  </li>
+<li>After you see an image, <b>you will need to indicate what category the object belongs to.</b> The response screen will show a set of 8 object categories you can choose from by clicking.
 <p>
-<li>After you see an image, <b>you will need to indicate whether the target object was in front or behind the occluder. You will also need to say where the object was in relation to the occluder </b>, i.e. to the upper-left, lower-left, upper-right, or lower-right. The response screen will show a set of drop-down menus for you to indicate your response.</li>
+<li>For example, if you saw an apple, you would click the image which indicates the best category match: a fruit. There is always a correct answer for every image.</li>
 <p>
-<li>For example, if you saw an apple placed in front of a disc to the upper-left, you would select "in front" and "upper-left" in the drop-down menus. There is always a correct answer for every image.</li>
-<p>
-<li>Even if you're not 100% sure of the locations of some of the objects you saw, <u><b>make your best guess.</b></u></li>
+<li>Even if you're not 100% sure of the categories of some of the objects you saw, <u><b>make your best guess.</b></u></li>
 </ul>
 <center><p onclick="$('#tutorial').html($('#tutorial3').html())"><font color=blue><u>Click here to continue reading</u></font></p></center>
 </div>
 <div id="tutorial3" style="visibility:hidden; position:absolute; z-index:-1;">
 <ul>
-<li>The objects will be presented on a complex background that is taken from a real-life scene. We are not interested in your responses to the background, only the relationship between the target object and the occluder.</li>
+<li>Sometimes the objects will be presented on a complex background that is taken from a real-life scene, while other times the objects will be presented on a blank white background. <b>The object may also be placed in front of or behind something like a white disc, sphere, ring, or square.</b> We are not interested in your responses to the background or these other elements.
 <p>
-<li>Please be sure you can see the sample question on your screen before beginning the experiment. As you work through the experiment, the arrangement of the answer menus will not change.</li>
+<li>Please be sure you can see 8 category images on your screen before beginning the experiment. As you work through the experiment, the layout arrangement of the response screen will not change.</li>
 <p>
-<li><b>In total, you will see 100 images. We expect this experiment to take about 15 minutes or less.</b> Note that the HIT will expire if you spend more than 30 minutes, so plan your time accordingly.</li>
+<li><b>In total, you will see 100 images. We expect this experiment to take about 12 minutes or less.</b> Note that the HIT will expire if you spend more than 25 minutes, so plan your time accordingly.</li>
 <p>
 <li>When you are ready to begin, click the "Begin" button at the very top of the screen. <b>Be prepared to see the first image -- it happens very fast!</b></li>
 <p>

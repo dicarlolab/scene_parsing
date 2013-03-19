@@ -53,8 +53,17 @@ Array.prototype.flatten = function flatten(){
 function beginExp() {
 	console.log('beginExp');
 	$('#begintask').hide(), $('#_preload').hide();
-	$('#nextTrial').show();
-	$('#group_container').hide();
+
+	$('#getClick').click(function(e) {
+		var offset = $(this).offset()		
+		var pos_x = e.pageX - offset.left;
+		var pos_y = e.pageY - offset.top;
+		clicked(pos_x, pos_y);
+	});
+
+	$('#getClick').hide();
+	bufferImg = new Image();
+	bufferImg.src = noObjFiles[trialNumber];
 	$('.fixation img').attr('src',fixationImage.src);
 	$('.fixation').show(); 
 	var thisStim = imgFiles_new[trialNumber];
@@ -76,33 +85,31 @@ function showStim() {
 
 function showResponse() {
 	console.log('showResponse');
-
-	$('#group_container').html('The '+categories[trialNumber]+' was <select id="Zpos"><option value=""></option><option value="in front">in front</option><option value="behind">behind</option></select> and to the <select id="XYpos"><option value=""></option><option value="upper-left">upper-left</option><option value="upper-right">upper-right</option><option value="lower-left">lower-left</option><option value="lower-right">lower-right</option></select> of the '+occluders[trialNumber]+'.<p><button id="nextTrial" onclick="clicked()">Next Trial</button><p><div id="trialCounter" style="font-size:small;"></div></div><p><div style="font-size:small;">Progress: '+trialNumber+' of '+totalTrials+'</div>');
-
-	$('#group_container').show();
+	$('#getClick').attr('src', bufferImg.src);	
+	$('#getClick').show();
 	trialStartTime = new Date();
 	var thisStim = imgFiles_new[trialNumber+1];
-	$('#main_test').attr('src',thisStim);	
+	$('#main_test').attr('src',thisStim);
+	bufferImg = new Image();
+	bufferImg.src = noObjFiles[trialNumber+1];
 }
 
-function clicked() {
-	if ($('#XYpos').val() == "" || $('#Zpos').val() == "") {}
-	else {
+function clicked(pos_x, pos_y) {
 	trialEndTime = new Date();
 	console.log('clicked');
-	$('#group_container').hide();
- 	pushData();
+	$('#getClick').hide();
+ 	pushData(pos_x, pos_y);
  	$('.fixation img').attr('src',fixationImage.src);
  	$('.fixation').show(); 
  	endTrial();
- 	}
 }
 
 
-function pushData() {
+function pushData(pos_x, pos_y) {
 	console.log('pushData');
+	console.log(pos_x), console.log(pos_y);
 	StimDone.push(imgFiles_new[trialNumber]);
-	obj = { 'XY':$('#XYpos').val(), 'Z':$('#Zpos').val() }
+	obj = { 'X':pos_x, 'Y':pos_y }
 	response.push(obj);
 	trialDurations.push(trialEndTime - trialStartTime);
 }
@@ -197,7 +204,7 @@ function init_vars() {
 	totalTrials = 100;
 	BreakTimes = [];
 	startpoint = 30;
-	exp_type = 'XY+Z';
+	exp_type = 'click';
 }
 	
 function buildLib() {
@@ -208,12 +215,11 @@ function buildLib() {
 
 function preload_resources() {
 	imgFiles_new = imgFiles.slice(startpoint*totalTrials,(startpoint+1)*totalTrials);
-
-	categories = categories.slice(startpoint*totalTrials,(startpoint+1)*totalTrials);
-
-	occluders = occluders.slice(startpoint*totalTrials,(startpoint+1)*totalTrials);
 	//shuffle(imgFiles_new);
-		
+	
+	noObjFiles = imgFiles_new.map(function(a) {
+		return 'http://dicarlocox-rendered-imagesets.s3.amazonaws.com/simple_geometric_occluder_no_obj/'+a.split('/')[4].split('.')[0]+'_no_obj.png';
+	});
 	//imgFiles_new = imgFiles_new.map(function(a) {
 	//	return "http://s3.amazonaws.com/dan_texture_task/dataset1/"+a;
 	//});				
@@ -233,7 +239,6 @@ $(document).ready(function() {
 							   
 	$('.test').hide();
 	$('#warning').hide();
-	$('#nextTrial').hide();
 		
 	//animateImgs();
 	$("#tutorial").html($("#tutorial_original").html());
@@ -261,27 +266,7 @@ $(document).ready(function() {
 <div id="_preload" align="center" style="position:fixed; top:0px; left:10px;"></div>
 <div class="fixation" align="center" style="position:relative; z-index:201; top:175px; left:-15px;"><img id="fixation_dot" src="" /></div>
 <div class="test" align="center" style="position:relative; z-index:200; top:75px; left:-15px;"><img id="main_test" src="" /></div>
-<div id="group_container" align="center" style="position:relative; top:265px;">
-<p><i>The following is an example of the type of question you will see. Click "Begin" to start the experiment.</i></p>
-The boat was
-<select id="Zpos">
-	<option value=""></option>
-	<option value="in front">in front</option>
-	<option value="behind">behind</option>
-</select>
-and to the 
-<select id="XYpos">
-	<option value=""></option>
-	<option value="upper-left">upper-left</option>
-	<option value="upper-right">upper-right</option>
-	<option value="lower-left">lower-left</option>
-	<option value="lower-right">lower-right</option>
-</select>
-of the sphere.
-<p>
-<button id="nextTrial" onclick="clicked()">Next Trial</button>
-<p>
-</div>
+<div align="center"><img id="getClick" src="" style="position:relative; top:75px;"/></div>
 
 <div id="tutorial_link" style="position:fixed; top:0px; right:10px;" onclick="$('#tutorial').html($('#tutorial_original').html()); $('#tutorial').dialog({height:700,							width:600,position:'center',title:'Instructions'})"><u>View Instructions</u></div>
 
