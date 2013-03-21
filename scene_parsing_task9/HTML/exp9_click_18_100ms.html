@@ -24,8 +24,6 @@ padding: 10px;
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
 <script type="text/javascript" language="JavaScript" src="http://web.mit.edu/esolomon/www/browserdetect.js"></script>
-<script type="text/javascript" src="http://web.mit.edu/esolomon/www/javascripts/jQueryRotate.2.2.js"></script>
-<script type="text/javascript" src="http://web.mit.edu/esolomon/www/javascripts/jQuery.mousewheel.js"></script>
 <script type="text/javascript" src="http://web.mit.edu/esolomon/www/javascripts/jquery.zoom-min.js"></script>
 <script type="text/javascript" src="http://web.mit.edu/esolomon/www/scene_parsing/scene_parsing_task9/taskdata.js"></script>
 <script type="text/javascript" src="http://web.mit.edu/esolomon/www/zen.js"></script>
@@ -41,7 +39,7 @@ shuffle = function(o) {
   };
   
 Array.prototype.flatten = function flatten(){
-   var flat = []; 
+   var flat = [];
    for (var i = 0, l = this.length; i < l; i++){
        var type = Object.prototype.toString.call(this[i]).split(' ').pop().split(']').shift().toLowerCase();
        if (type) { flat = flat.concat(/^(array|collection|arguments|object)$/.test(type) ? flatten.call(this[i]) : this[i]); }
@@ -54,16 +52,27 @@ Array.prototype.flatten = function flatten(){
 
 function beginExp() {
 	console.log('beginExp');
-	$("#begintask").hide(), $("#_preload").hide();
-	started = true;
-	$('#group_container').hide();
+	$('#begintask').hide(), $('#_preload').hide();
+
+	$('#getClick').click(function(e) {
+		var offset = $(this).offset()		
+		var pos_x = e.pageX - offset.left;
+		var pos_y = e.pageY - offset.top;
+		clicked(pos_x, pos_y, e.pageX, e.pageY);
+	});
+
+	$('#getClick').hide();
+	$('#instruct').hide();
+	$('#trialCounter').hide();
+	//bufferImg = new Image();
+	//bufferImg.src = noObjFiles[trialNumber];
 	$('.fixation img').attr('src',fixationImage.src);
 	$('.fixation').show(); 
 	var thisStim = imgFiles_new[trialNumber];
 	$('#main_test').attr('src',thisStim);
 	setTimeout(function() {
 						showStim();
-						},ISI);
+						},500);
 }
 
 function showStim() {
@@ -77,46 +86,66 @@ function showStim() {
 }
 
 function showResponse() {
-	console.log('showResponse');
-	$('#totalSeen').html('Which object did you see?');
-	clickEvents = {};
-	clickTiming = {};
-	$('#group_container').show();
-	$('#trialCounter').html('Progress: '+trialNumber+' of '+totalTrials);
+		click_count = 0;
+		obj = {};
+		trial_times = {}
+	$('#instruct').html('Click where the <b><font color=red>'+occluders[trialNumber]+'</b></font> center was!');
+	//$('#getClick').attr('src', bufferImg.src);	
+	$('#getClick').show();
+	$('#instruct').show();
 	trialStartTime = new Date();
 	var thisStim = imgFiles_new[trialNumber+1];
 	$('#main_test').attr('src',thisStim);
-	
+	$('#trialCounter').html('Progress: '+trialNumber+' of '+totalTrials);
+	$('#trialCounter').show()
+	//bufferImg = new Image();
+	//bufferImg.src = noObjFiles[trialNumber+1];
 }
 
-function clicked(myval) {
-	console.log('clicked');
- $('#responsetable').html(table_HTML);
- $('#trialCounter').html('Progress: '+trialNumber+' of '+totalTrials);
- $('.tbrow').show();
- pushData(myval)
- $('.fixation img').attr('src',fixationImage.src);
- $('.fixation').show(); 
- endTrial();
-	
+function clicked(pos_x, pos_y, eX, eY) {
+	trialEndTime = new Date();
+	if (click_count == 0) {
+		$('body').prepend('<div class="marker" style="width:10px; height:10px; background-color:red; position:absolute; z-index:202; top:'+(eY-5)+'px; left:'+(eX-5)+'px;"></div>');
+	}
+	else {
+		$('body').prepend('<div class="marker" style="width:10px; height:10px; background-color:blue; position:absolute; z-index:202; top:'+(eY-5)+'px; left:'+(eX-5)+'px;"></div>');
+
+	}
+ 	pushData(pos_x, pos_y);
 }
 
-
-function pushData(myval) {
-	console.log('pushData');
-StimDone.push(imgFiles_new[trialNumber]);
-response.push(myval);
-trialDurations.push(trialEndTime - trialStartTime);
-clickEvents_rec.push(clickEvents);
-clickTiming_rec.push(clickTiming);
+function pushData(pos_x, pos_y) {
+	
+	StimDone.push(imgFiles_new[trialNumber]);
+	if (click_count == 0) {
+		obj['occluder'] = { 'X':pos_x, 'Y':pos_y };
+		trial_times['occluder'] = trialEndTime - trialStartTime;
+		click_count++;
+		$('#instruct').html('Click where the <b><font color=blue>'+categories[trialNumber]+'</b></font> center was!');
+	}
+	else {
+		obj['object'] = { 'X':pos_x, 'Y':pos_y };
+		trial_times['object'] = trialEndTime - trialStartTime;
+		response.push(obj);
+		trialDurations.push(trial_times);
+		setTimeout(function() {
+			endTrial()
+			$('#getClick').hide();
+			$('#instruct').hide();
+			$('#trialCounter').hide();
+		}, 50);
+	}
 }
 
 function endTrial() {
+	$('.fixation img').attr('src',fixationImage.src);
+ 	$('.fixation').show(); 
+ 	$('.marker').remove();
   if (trialNumber >= (totalTrials-1))
   {
 	var resultsobj = [];
 	resultsobj.push({
-					Response:clickEvents_rec,
+					Response:response,
 					ImgOrder:imgFiles_new,
 					StimShown:StimDone,
 					StimDuration:stimduration,
@@ -143,7 +172,7 @@ function endTrial() {
   else
   {
     trialNumber++;
-    setTimeout(function() {showStim()},ISI);
+    setTimeout(function() {showStim()},500);
   }
 }
 
@@ -151,7 +180,7 @@ function takeABreak() {
 	$('#main_test').attr('src',breakscreen.src);
 	$('.fixation').hide();
 	$('.test').show()
-	$('#_preload').html("<font color=red style=background-color:white>You have completed "+Math.round((trialNumber/totalTrials)*100)+"% of the experiment. Be sure to pay attention so that you know you can finish on time!");
+	$('#_preload').html("<font color=red style=background-color:white> You have completed "+Math.round((trialNumber/totalTrials)*100)+"% of the experiment. Be sure to pay attention so that you know you can finish on time!");
 	$('#_preload').show();
 	document.onkeypress = function(e){  
 			var evtobj = window.event? event : e;
@@ -173,8 +202,8 @@ function takeABreak() {
 
 function gup( name )
 {
-  name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
-  var regexS = "[\\?&]"+name+"=([^&#]*)";
+  name = name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
+  var regexS = "[\?&]"+name+"=([^&#]*)";
   var regex = new RegExp( regexS );
   var param = regex.exec( window.location.href );
   if( param == null )
@@ -186,10 +215,6 @@ function gup( name )
 function init_vars() {
 	zoom = DetectZoom.zoom();
 	aID = gup("assignmentId");  
-	clickEvents = new Array();
-	clickEvents_rec = new Array();
-	clickTiming = new Array();
-	clickTiming_rec = new Array();
 	response = new Array();
 	trialDurations = new Array();
 	trialStartTime = new Date();
@@ -204,10 +229,8 @@ function init_vars() {
 	trialNumber = 0;
 	totalTrials = 100;
 	BreakTimes = [];
-	oneQ = true;
-	started = false;
-	startpoint = 0;
-	exp_type = 'obj';
+	startpoint = 18;
+	exp_type = 'click';
 }
 	
 function buildLib() {
@@ -217,78 +240,31 @@ function buildLib() {
 }
 
 function preload_resources() {
-	imgFiles_new = imgFiles.slice(startpoint*totalTrials,(startpoint+1)*totalTrials)
-	shuffle(imgFiles_new);
-		
+	imgFiles_new = imgFiles.slice(startpoint*totalTrials,(startpoint+1)*totalTrials);
+	//shuffle(imgFiles_new);
+	categories = categories.slice(startpoint*totalTrials,(startpoint+1)*totalTrials);
+	occluders = occluders.slice(startpoint*totalTrials,(startpoint+1)*totalTrials);
+	
+	noObjFiles = imgFiles_new.map(function(a) {
+		return 'http://dicarlocox-rendered-imagesets.s3.amazonaws.com/simple_geometric_occluder_no_obj/'+a.split('/')[4].split('.')[0]+'_no_obj.png';
+	});
 	//imgFiles_new = imgFiles_new.map(function(a) {
 	//	return "http://s3.amazonaws.com/dan_texture_task/dataset1/"+a;
 	//});				
 	
 }
 
-function nextq(obj){
-	if (started) {
-	clickEvents['obj'] = obj;
-	time = new Date();
-	clickTiming['obj'] = time-trialStartTime;
-	table_HTML = $('#responsetable').html();
-	
-	$('#leftsquare').html('<div style="position:relative; top:125px; height:200px; width:200px;" ><button onclick="sayBehind()">Object Behind</button></div>');
-	$('#rightsquare').html('<div style="position:relative; top:125px; height:200px; width:200px" src ="frontfence.png"><button onclick="sayFront()">Object in Front</button></div>');
-	$('#totalSeen').html('Where was the object?').css({'top':'40px'});
-	$('#trialCounter').css({'top':'42px'});
-	
-	$('.tbrow').hide();
-	
-	if (oneQ == true) {
-		trialEndTime = new Date();
-		$('#group_container').hide();
-		clicked(clickEvents['obj']);
-	}
-	else {
-	}
-	}
-	else {
-	}
-	
-}
-
-function sayFront() {
-	clickEvents['pos'] = 'front';
-	time = new Date();
-	clickTiming['pos'] = time-trialStartTime;
-	trialEndTime = new Date();
-	$('#group_container').hide();
-	clicked(clickEvents['obj']);
-}
-
-function sayBehind() {
-	clickEvents['pos'] = 'back';
-	time = new Date();
-	clickTiming['pos'] = time-trialStartTime;
-	trialEndTime = new Date();
-	$('#group_container').hide();
-	clicked(clickEvents['obj']);
-}
-
-
 $(document).ready(function() {
 	
 	init_vars();
 	buildLib();
 	preload_resources();
-	
 	preload(imgFiles_new, function() {
 							   $("#begintask").click(function(){
 															  beginExp();
 															  });
 							   });		
-	//init_groups();
-	//createGroup();
-	//assignButtons();
-	$('.plus').bind('click', function(event) { event.stopPropagation() });
-	$('.minus').bind('click', function(event) { event.stopPropagation() });
-	
+							   
 	$('.test').hide();
 	$('#warning').hide();
 		
@@ -316,74 +292,22 @@ $(document).ready(function() {
 <div align="center" id="warning"></div>
 <div align="center"><button id="begintask" value="Begin!">Begin!</button></div>
 <div id="_preload" align="center" style="position:fixed; top:0px; left:10px;"></div>
-<div class="fixation" align="center" style="position:relative; z-index:201; top:175px; left:-15px;"><img id="fixation_dot" src="" /></div>
-<div class="test" align="center" style="position:relative; z-index:200; top:75px; left:-15px;"><img id="main_test" src="" /></div>
-<div id="group_container" align="center">
-<table width="800" cellpadding="0" cellspacing="0" height="500" border="0" align="center" style="visibility:visible" id="responsetable">
-  <tr height=200 class="tbrow">
-    <td align="center"><img height=200 width=200 src ="http://s3.amazonaws.com/384selections/Variation00_nobg/animals/bear_rx%2B00.000_ry%2B90.000_rz%2B00.000_tx%2B00.000_ty%2B00.000_s%2B00.800_fd9cf629ba3f5c7f127404739f555bf381fe7a32_150x150.png" onclick="nextq('animal')" />
-    <br/>
-    <div style="position:relative; top:-50px;">
-Animals
-    </div>
-    </td>
-    <td align="center" ><img height=200 width=200 src ="http://s3.amazonaws.com/384selections/Variation00_nobg/boats/BAHRAIN_rx%2B00.000_ry%2B00.000_rz%2B00.000_tx%2B00.000_ty%2B00.000_s%2B01.200_bcbfb7f6f104bdba7d62908b5eb5e1ba232da6d3_150x150.png" onclick="nextq('boats')"/>
-    <br/>
-    <div style="position:relative; top:-50px;">
-Boats
-    </div></td>
-    <td align="center"><img height=200 width=200 src ="http://s3.amazonaws.com/384selections/Variation00_nobg/cars/alfa155_rx%2B00.000_ry%2B00.000_rz%2B00.000_tx%2B00.000_ty%2B00.000_s%2B01.000_5a93409f4f5c7c3b3261090530ee4c7cdfebf57a_150x150.png" onclick="nextq('cars')"/>
-    <br/>
-    <div style="position:relative; top:-50px;">
-Cars
-    </div></td>
-  </tr>
-  <tr>
-    <td align="center" id="leftsquare"><img style="position:relative; top:-50px;" height=200 width=200 src ="http://s3.amazonaws.com/384selections/Variation00_nobg/chairs/_001_rx%2B00.000_ry%2B00.000_rz%2B00.000_tx%2B00.000_ty%2B00.000_s%2B00.700_10b0bff2f9b7f0a853edac7ed9b5e2d737da033a_150x150.png" onclick="nextq('chairs')"/>
-    <br/>
-    <div style="position:relative; top:-100px;">
-Chairs
-    </div>
-    </td>
-    <td width="200" height="150" align="left" style="vertical-align:center;">
-    <div align="center" style="font-size:larger; margin-bottom:0px; position:relative; top:-50px;" id="totalSeen"></div>
-    <div align="center" id="trialCounter" style="position:relative; top:-50px;"></div>
-    </center>
-	</td>
-    <td align="center" id="rightsquare"><img style="position:relative; top:-50px;" height=200 width=200 src ="http://s3.amazonaws.com/384selections/Variation00_nobg/faces/face0001_rx%2B00.000_ry%2B00.000_rz%2B00.000_tx%2B00.000_ty%2B00.000_s%2B01.000_0c0d7402273188a7ed2d91dbef4baf75554c2017_150x150.png" onclick="nextq('faces')"/>
-    <br/>
-    <div style="position:relative; top:-100px;">
-Faces
-    </div>
-    </td>
-  </tr>
-  <tr height=200 class="tbrow">
-    <td align="center"><img style="position:relative; top:-100px;" height=200 width=200 src ="http://s3.amazonaws.com/384selections/Variation00_nobg/fruits/Apple_Fruit_obj_rx-90.000_ry%2B00.000_rz%2B00.000_tx%2B00.000_ty%2B00.000_s%2B00.700_99d1e850e215676eff1d7db3ba4e156370a81663_150x150.png" onclick="nextq('fruits')"/>
-    <br/>
-    <div style="position:relative; top:-150px;">
-Fruits
-    </div>
-    </td>
-    <td align="center"><img style="position:relative; top:-100px;" height=200 width=200 src ="http://s3.amazonaws.com/384selections/Variation00_nobg/planes/_01_Airliner_2jetEngines_rx%2B00.000_ry%2B90.000_rz%2B90.000_tx%2B00.000_ty%2B00.000_s%2B01.300_2f044ae294a23fee6bbe2b7bc0be610726abe88b_150x150.png" onclick="nextq('planes')"/>
-    <br/>
-    <div style="position:relative; top:-150px;">
-Planes
-    </div></td>
-    <td align="center"><img style="position:relative; top:-100px;" height=200 width=200 src ="http://s3.amazonaws.com/384selections/Variation00_nobg/tables/_08_rx%2B00.000_ry%2B00.000_rz%2B00.000_tx%2B00.000_ty%2B00.000_s%2B00.700_b69a1345364079ad15436e629e52e02e050dbf2b_150x150.png" onclick="nextq('tables')"/>
-    <br/>
-    <div style="position:relative; top:-150px;">
-Tables
-    </div></td>
-  </tr>
-</table>
+<div class="fixation" align="center" style="position:relative; z-index:201; top:175px; left:0px;"><img id="fixation_dot" src="" /></div>
+<div class="test" align="center" style="position:relative; z-index:200; top:75px; left:0px;"><img id="main_test" src="" /></div>
+<div align="center" id="markers">
+	<img id="getClick" src="https://s3.amazonaws.com/objectome32/whitebg.png" style="position:relative; top:75px; left:0px;" border=2 height=512 width=512/>
+	<div id="instruct" style="position:relative; top:-490px; font-size:150%;">Please read the instructions carefully!</div>
+	<div id="trialCounter" style="position:relative; top:65px; font-size:small;"></div>
 </div>
+
+
 
 <div id="tutorial_link" style="position:fixed; top:0px; right:10px;" onclick="$('#tutorial').html($('#tutorial_original').html()); $('#tutorial').dialog({height:700,							width:600,position:'center',title:'Instructions'})"><u>View Instructions</u></div>
 
 <div id="tutorial" style="position:relative; z-index:-1"></div>
 <div id="tutorial_original" style="position:absolute; z-index:-1; visibility:hidden;"><b>Please read these instructions carefully!</b>
 <p>Thank you for your interest! You are contributing to ongoing vision research at the Massachusetts Institute of Technology McGovern Institute for Brain Research.</p>
-<p><font color=red><b>This task will require you to look at images on your computer screen and click to indicate a response for up to about 12 minutes. If you cannot meet these requirements for any reason, or if doing so could cause discomfort or injury to you, do not accept this HIT.</p>
+<p><font color=red><b>This task will require you to look at images on your computer screen and click to indicate a response for up to about 10 minutes. If you cannot meet these requirements for any reason, or if doing so could cause discomfort or injury to you, do not accept this HIT.</p>
 <p>We encourage you to try a little bit of this  HIT before accepting to ensure it is compatible with your system. If you think the task is working improperly, your computer may be incompatible.</p></font></b>
 <p>We recommend this task for those who are interested in contributing to scientific endeavors. Your answers will help MIT researchers better understand how the brain processes visual information.</p>
 <center><p onclick="$('#tutorial').html($('#tutorial2').html())"><font color=blue><u>Click here to continue reading</u></font></p></center></div>
@@ -391,21 +315,37 @@ Tables
 <ul>
 <li>You will see a series of images, each one presented for a very brief time. Each image will contain an object in one of eight target categories: <b>Animals, Boats, Cars, Chairs, Faces, Fruits, Planes and Tables.</b></li>
 <p>
-<li>After you see an image, <b>you will need to indicate what category the object belongs to.</b> The response screen will show a set of 8 object categories you can choose from by clicking.
+<li>Each image will also have one of the following shapes: <b>disc, square, sphere, or ring</b>. The target object will be placed either in front of or behind the shape.</li>
 <p>
-<li>For example, if you saw an apple, you would click the image which indicates the best category match: a fruit. There is always a correct answer for every image.</li>
+<li>After you see an image, <b>you must indicate two things: (1) The location of the <u>center</u> of the shape, and (2) The location of the <u>center</u> of the object.</b> You will be given a blank space where you can click to report the location of the shape center and object center.</li>
 <p>
-<li>Even if you're not 100% sure of the categories of some of the objects you saw, <u><b>make your best guess.</b></u></li>
+<li>Your first click will indicate the center of the shape, and your second click will indicate the center of the object. After your second click, you will automatically move on to the next image.</li>
+<p>
+<li>For example, if you saw an apple and a disc, you would first click to report the location of the disc, and then click to report the location of the apple.</li>
+<p>
+<li>Even if you're not 100% sure of the locations of some of the objects you saw, <u><b>make your best guess.</b></u></li>
 </ul>
 <center><p onclick="$('#tutorial').html($('#tutorial3').html())"><font color=blue><u>Click here to continue reading</u></font></p></center>
 </div>
 <div id="tutorial3" style="visibility:hidden; position:absolute; z-index:-1;">
 <ul>
-<li>Sometimes the objects will be presented on a complex background that is taken from a real-life scene, while other times the objects will be presented on a blank white background. <b>The object may also be placed in front of or behind something like a white disc, sphere, ring, or square.</b> We are not interested in your responses to the background or these other elements.
+	<li>Remember, you are indicating the <b><u>center position</u></b> of both the shape and object. Even if you did not see the center of the shape or the object, make your best guess as to where it was. The example image below shows the centers of the shape and object:</li>
+	<p>
+	<center><img src="https://s3.amazonaws.com/scene_parsing/instruction_img.png" width=250 height=250 /></center>
+	<p>
+	<li>In this image, an eggplant is behind a square, but you cannot see the exact center of the eggplant. <b>However, you would make your best guess and click in that location.</b> During the experiment, you will only see each image for a brief flash, and you will report your answer on a blank canvas.</li>
+	</ul>
+	<center><p onclick="$('#tutorial').html($('#tutorial4').html())"><font color=blue><u>Click here to continue reading</u></font></p></center>
+</div>
+
+</div>
+<div id="tutorial4" style="visibility:hidden; position:absolute; z-index:-1;">
+<ul>
+<li>The objects will be presented on a complex background that is taken from a real-life scene. We are not interested in your responses to the background, only the relationship between the target object and the shape.</li>
 <p>
-<li>Please be sure you can see 8 category images on your screen before beginning the experiment. As you work through the experiment, the layout arrangement of the response screen will not change.</li>
+<li>Please be sure you can see the big white square on your screen before beginning the experiment.</li>
 <p>
-<li><b>In total, you will see 100 images. We expect this experiment to take about 12 minutes or less.</b> Note that the HIT will expire if you spend more than 25 minutes, so plan your time accordingly.</li>
+<li><b>In total, you will see 100 images. We expect this experiment to take about 10 minutes or less.</b> Note that the HIT will expire if you spend more than 25 minutes, so plan your time accordingly.</li>
 <p>
 <li>When you are ready to begin, click the "Begin" button at the very top of the screen. <b>Be prepared to see the first image -- it happens very fast!</b></li>
 <p>

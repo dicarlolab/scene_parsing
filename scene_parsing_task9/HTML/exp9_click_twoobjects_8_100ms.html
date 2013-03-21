@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>Category Counting</title>
+<title>Object Locations</title>
 
 <style>
 body { margin:0; padding: 0; font-family: 'trebuchet ms', trebuchet, verdana }
@@ -25,7 +25,7 @@ padding: 10px;
 <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
 <script type="text/javascript" language="JavaScript" src="http://web.mit.edu/esolomon/www/browserdetect.js"></script>
 <script type="text/javascript" src="http://web.mit.edu/esolomon/www/javascripts/jquery.zoom-min.js"></script>
-<script type="text/javascript" src="http://web.mit.edu/esolomon/www/scene_parsing/scene_parsing_task9/taskdata.js"></script>
+<script type="text/javascript" src="http://web.mit.edu/esolomon/www/scene_parsing/scene_parsing_task9/taskdata_twoobjects.js"></script>
 <script type="text/javascript" src="http://web.mit.edu/esolomon/www/zen.js"></script>
 <script type="text/javascript" src="http://esolomon.scripts.mit.edu/ip.php"></script>
 <script src="http://web.mit.edu/esolomon/www/javascripts/detect-zoom.js" type="text/javascript"></script>
@@ -89,7 +89,7 @@ function showResponse() {
 		click_count = 0;
 		obj = {};
 		trial_times = {}
-	$('#instruct').html('Click where the <b><font color=red>'+occluders[trialNumber]+'</b></font> center was!');
+	$('#instruct').html('<b>'+obj1[trialNumber]+'</b>');
 	//$('#getClick').attr('src', bufferImg.src);	
 	$('#getClick').show();
 	$('#instruct').show();
@@ -118,14 +118,14 @@ function pushData(pos_x, pos_y) {
 	
 	StimDone.push(imgFiles_new[trialNumber]);
 	if (click_count == 0) {
-		obj['occluder'] = { 'X':pos_x, 'Y':pos_y };
-		trial_times['occluder'] = trialEndTime - trialStartTime;
+		obj[obj1_meta[trialNumber]] = { 'X':pos_x, 'Y':pos_y };
+		trial_times[obj1_meta[trialNumber]] = trialEndTime - trialStartTime;
 		click_count++;
-		$('#instruct').html('Click where the <b><font color=blue>'+categories[trialNumber]+'</b></font> center was!');
+		$('#instruct').html('<b>'+obj2[trialNumber]+'</b>');
 	}
 	else {
-		obj['object'] = { 'X':pos_x, 'Y':pos_y };
-		trial_times['object'] = trialEndTime - trialStartTime;
+		obj[obj2_meta[trialNumber]] = { 'X':pos_x, 'Y':pos_y };
+		trial_times[obj2_meta[trialNumber]] = trialEndTime - trialStartTime;
 		response.push(obj);
 		trialDurations.push(trial_times);
 		setTimeout(function() {
@@ -202,8 +202,8 @@ function takeABreak() {
 
 function gup( name )
 {
-  name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
-  var regexS = "[\\?&]"+name+"=([^&#]*)";
+  name = name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
+  var regexS = "[\?&]"+name+"=([^&#]*)";
   var regex = new RegExp( regexS );
   var param = regex.exec( window.location.href );
   if( param == null )
@@ -229,21 +229,17 @@ function init_vars() {
 	trialNumber = 0;
 	totalTrials = 100;
 	BreakTimes = [];
-	startpoint = 30;
-	exp_type = 'click';
+	startpoint = 8;
+	exp_type = 'click_twoobjects';
 }
 	
-function buildLib() {
-	//imgFiles = groupings_base.flatten();
-	//shuffle(imgFiles)
-	//imgFiles = shuffle(imgFiles);
-}
-
 function preload_resources() {
 	imgFiles_new = imgFiles.slice(startpoint*totalTrials,(startpoint+1)*totalTrials);
 	//shuffle(imgFiles_new);
-	categories = categories.slice(startpoint*totalTrials,(startpoint+1)*totalTrials);
-	occluders = occluders.slice(startpoint*totalTrials,(startpoint+1)*totalTrials);
+	obj1= obj1.slice(startpoint*totalTrials,(startpoint+1)*totalTrials);
+	obj2 = obj2.slice(startpoint*totalTrials,(startpoint+1)*totalTrials);
+	obj1_meta = obj1_meta.slice(startpoint*totalTrials,(startpoint+1)*totalTrials);
+	obj2_meta = obj2_meta.slice(startpoint*totalTrials,(startpoint+1)*totalTrials);
 	
 	noObjFiles = imgFiles_new.map(function(a) {
 		return 'http://dicarlocox-rendered-imagesets.s3.amazonaws.com/simple_geometric_occluder_no_obj/'+a.split('/')[4].split('.')[0]+'_no_obj.png';
@@ -257,7 +253,6 @@ function preload_resources() {
 $(document).ready(function() {
 	
 	init_vars();
-	buildLib();
 	preload_resources();
 	preload(imgFiles_new, function() {
 							   $("#begintask").click(function(){
@@ -296,7 +291,7 @@ $(document).ready(function() {
 <div class="test" align="center" style="position:relative; z-index:200; top:75px; left:0px;"><img id="main_test" src="" /></div>
 <div align="center" id="markers">
 	<img id="getClick" src="https://s3.amazonaws.com/objectome32/whitebg.png" style="position:relative; top:75px; left:0px;" border=2 height=512 width=512/>
-	<div id="instruct" style="position:relative; top:-490px; font-size:150%;">Please read the instructions carefully!</div>
+	<div id="instruct" style="position:relative; top:-220px; font-size:100%; display:table; pointer-events:none; color:#999999;">Please read the instructions carefully!</div>
 	<div id="trialCounter" style="position:relative; top:65px; font-size:small;"></div>
 </div>
 
@@ -313,15 +308,13 @@ $(document).ready(function() {
 <center><p onclick="$('#tutorial').html($('#tutorial2').html())"><font color=blue><u>Click here to continue reading</u></font></p></center></div>
 <div id="tutorial2" style="visibility:hidden; position:absolute; z-index:-1;">
 <ul>
-<li>You will see a series of images, each one presented for a very brief time. Each image will contain an object in one of eight target categories: <b>Animals, Boats, Cars, Chairs, Faces, Fruits, Planes and Tables.</b></li>
+<li>You will see a series of images, each one presented for a very brief time. Each image will contain 2 objects in one of eight target categories: <b>Animals, Boats, Cars, Chairs, Faces, Fruits, Planes and Tables.</b> The objects may be overlapping, so that one is behind the other.</li>
 <p>
-<li>Each image will also have one of the following shapes: <b>disc, square, sphere, or ring</b>. The target object will be placed either in front of or behind the shape.</li>
+<li>After you see an image, <b>you must indicate the location of the <u>centers</u> of the two objects by clicking.</b> You will be given a blank space where you can click to report the location of both of the object centers.</li>
 <p>
-<li>After you see an image, <b>you must indicate two things: (1) The location of the <u>center</u> of the shape, and (2) The location of the <u>center</u> of the object.</b> You will be given a blank space where you can click to report the location of the shape center and object center.</li>
+<li>A message at the center of the screen will tell you the identity of the object to click first. After your second click, you will automatically move on to the next image.</li>
 <p>
-<li>Your first click will indicate the center of the shape, and your second click will indicate the center of the object. After your second click, you will automatically move on to the next image.</li>
-<p>
-<li>For example, if you saw an apple and a disc, you would first click to report the location of the disc, and then click to report the location of the apple.</li>
+<li>For example, if you saw an apple and a boat, the message would first read, "boat" and you would click to report the location of the boat's center. Then, the message would read, "apple" and you would click to report the location of the apple's center.</li>
 <p>
 <li>Even if you're not 100% sure of the locations of some of the objects you saw, <u><b>make your best guess.</b></u></li>
 </ul>
@@ -329,11 +322,13 @@ $(document).ready(function() {
 </div>
 <div id="tutorial3" style="visibility:hidden; position:absolute; z-index:-1;">
 <ul>
-	<li>Remember, you are indicating the <b><u>center position</u></b> of both the shape and object. Even if you did not see the center of the shape or the object, make your best guess as to where it was. The example image below shows the centers of the shape and object:</li>
+	<li>Remember, you are indicating the <b><u>center position</u></b> of both of the objects. Even if you did not see the center of the object, make your best guess as to where it was. The example image below shows the centers of two objects:</li>
 	<p>
-	<center><img src="https://s3.amazonaws.com/scene_parsing/instruction_img.png" width=250 height=250 /></center>
+	<center><img src="https://s3.amazonaws.com/scene_parsing/instruction_img2.png" width=250 height=250 /></center>
 	<p>
-	<li>In this image, an eggplant is behind a square, but you cannot see the exact center of the eggplant. <b>However, you would make your best guess and click in that location.</b> During the experiment, you will only see each image for a brief flash, and you will report your answer on a blank canvas.</li>
+	<li>In this image, a chair is behind a head, but you cannot see the exact center of the chair. <b>However, you would make your best guess and click in that location.</b> During the experiment, you will only see each image for a brief flash, and you will report your answer on a blank canvas.</li>
+	<p>
+	<li>If the image contains two of the same object, like two boats or two cars, it does not matter which one you choose to locate first.</li>
 	</ul>
 	<center><p onclick="$('#tutorial').html($('#tutorial4').html())"><font color=blue><u>Click here to continue reading</u></font></p></center>
 </div>
@@ -341,7 +336,7 @@ $(document).ready(function() {
 </div>
 <div id="tutorial4" style="visibility:hidden; position:absolute; z-index:-1;">
 <ul>
-<li>The objects will be presented on a complex background that is taken from a real-life scene. We are not interested in your responses to the background, only the relationship between the target object and the shape.</li>
+<li>The objects will be presented on a complex background that is taken from a real-life scene. We are not interested in your responses to the background, only the relationship between the two objects.</li>
 <p>
 <li>Please be sure you can see the big white square on your screen before beginning the experiment.</li>
 <p>
