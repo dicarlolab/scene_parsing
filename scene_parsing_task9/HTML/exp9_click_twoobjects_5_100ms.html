@@ -118,14 +118,14 @@ function pushData(pos_x, pos_y) {
 	
 	StimDone.push(imgFiles_new[trialNumber]);
 	if (click_count == 0) {
-		obj[obj1_meta[trialNumber]] = { 'X':pos_x, 'Y':pos_y };
-		trial_times[obj1_meta[trialNumber]] = trialEndTime - trialStartTime;
+		obj['obj1'] = { 'X':pos_x, 'Y':pos_y };
+		trial_times['obj1'] = trialEndTime - trialStartTime;
 		click_count++;
 		$('#instruct').html('<b>'+obj2[trialNumber]+'</b>');
 	}
 	else {
-		obj[obj2_meta[trialNumber]] = { 'X':pos_x, 'Y':pos_y };
-		trial_times[obj2_meta[trialNumber]] = trialEndTime - trialStartTime;
+		obj['obj2'] = { 'X':pos_x, 'Y':pos_y };
+		trial_times['obj2'] = trialEndTime - trialStartTime;
 		response.push(obj);
 		trialDurations.push(trial_times);
 		setTimeout(function() {
